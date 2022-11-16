@@ -1,6 +1,6 @@
 # Reagent Bottle Image Analysis
 
-Image analysis for fluid detection and volume estimation in (Company?) Benchmark ULTRA bottles.
+Image analysis for fluid detection and volume estimation in Benchmark ULTRA bottles.
 
 ## Table of contents
 * [General info](#general-info)
