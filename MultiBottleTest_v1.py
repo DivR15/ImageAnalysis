@@ -4,9 +4,7 @@
 
 # Import Libraries
 
-import numpy as np
 import cv2 as cv 
-import matplotlib.pylab as plt
 import os
 import csv
 
