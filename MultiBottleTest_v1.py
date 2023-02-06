@@ -10,7 +10,7 @@ import csv
 
 # Read File and Gamma Conversion.
 
-nat = cv.imread("") # Path of image here
+nat = cv.imread("") # Name of image here
 nat_2 = cv.cvtColor(nat, cv.COLOR_BGR2RGB)
 cv.imshow("", nat_2)
 cv.waitKey(0)
@@ -26,8 +26,6 @@ def gammaCorrection(src, gamma):
 
 gamma = 0.3      # change the value here to get different result
 adjusted = gammaCorrection(nat_2, gamma=gamma)
-directory = "" # Path of directory to save the file here
-os.chdir(directory)
 cv.imwrite("Threshold.jpg", adjusted)
 
 imGray = cv.cvtColor(adjusted, cv.COLOR_BGR2GRAY)
