@@ -40,7 +40,7 @@ Libraries:
 - OpenCV
 - Image
 - Os
-- kivi
+- kivy
 
 Hardware:
 - Raspberry Pi 3
