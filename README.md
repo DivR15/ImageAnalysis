@@ -29,8 +29,15 @@ The code is currently in progress and will have additional hardware dependencies
 For the image analysis,
 
 - Download required packages (see [Dependencies](#dependencies))
-- Install repository and unzip
-- Run the program to view analysis of example images
+- Install the `Final Code` Folder
+- Within the file, run the program FinalCode_1.py to view analysis of example images
+  - Edit the input string within `cv.imread()` (shown below) to change the image to be analyzed:
+
+	```python
+	# Read File and Gamma Conversion.
+
+	nat = cv.imread("Multi4B2S.jpg")
+	```
 
 ## Screenshots and Figures
 To be updated
