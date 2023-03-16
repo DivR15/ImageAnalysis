@@ -116,7 +116,7 @@ class windowManager(ScreenManager):
 
 
 # kv file
-kv = Builder.load_file('my1.kv')
+kv = Builder.load_file('my2.kv')
 sm = windowManager()
 
 # reading all the data stored
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     pass
 
 
-kv = Builder.load_file("my1.kv")
+kv = Builder.load_file("my2.kv")
 
 
 class MyMainApp(App):

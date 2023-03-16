@@ -77,29 +77,7 @@ class logDataWindow(Screen):
     pass
 
 # class for analysis
-class processingWindow(Screen):
-
-    #ultraid = ObjectProperty(None)
-
-    #def dataanalysis(self):
-
-        # creating a DataFrame of the info
-        # data = pd.DataFrame([[self.ultraid.text, self.email.text, #variables from image analysis code]],
-        #                     columns=['Ultra', 'User', #variable names])
-
-        ## Append data to the csv file
-        #data.to_csv('data.csv', mode='a', header=False, index=False)
-        #   sm.current = 'processing'
-        #   self.ultraid.text = ""
-        #   self.email.text = ""
-        #   self.variables = ""
-
-
-    #INSERT ANALYSIS CODE HERE
-    pass
-
-# class for post processing options
-class postpWindow(Screen):
+class somethingWindow(Screen):
     pass
 
 # class for analysis
@@ -116,7 +94,7 @@ class windowManager(ScreenManager):
 
 
 # kv file
-kv = Builder.load_file('my1.kv')
+kv = Builder.load_file('my.kv')
 sm = windowManager()
 
 # reading all the data stored
@@ -126,10 +104,9 @@ users = pd.read_csv('login.csv')
 sm.add_widget(loginWindow(name='login'))
 sm.add_widget(signupWindow(name='signup'))
 sm.add_widget(logDataWindow(name='logdata'))
+sm.add_widget(analysisWindow(name='something'))
 sm.add_widget(analysisWindow(name='analysis'))
 sm.add_widget(dataWindow(name='data'))
-sm.add_widget(processingWindow(name='processing'))
-sm.add_widget(postpWindow(name='postp'))
 
 
 # class that builds gui
@@ -144,7 +121,7 @@ if __name__ == "__main__":
     pass
 
 
-kv = Builder.load_file("my1.kv")
+kv = Builder.load_file("my.kv")
 
 
 class MyMainApp(App):
@@ -154,3 +131,4 @@ class MyMainApp(App):
 
 if __name__ == "__main__":
     MyMainApp().run()
+
