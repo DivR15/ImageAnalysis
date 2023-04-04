@@ -12,6 +12,8 @@ import cv2 as cv
 import csv
 from datetime import date
 import time
+from picamera import PiCamera
+from time import sleep
 
 
 # class to call the popup function
@@ -87,11 +89,19 @@ class processingWindow(Screen):
 
     ultraid = ObjectProperty(None)
 
-    def dataanalysis(self):
-        img = cv.imread("CropTest4.jpg")
+    def dataanalysis():
+
+        #Image Capture
+        camera = PiCamera()
+        camera_start_preview()
+        sleep(5)
+        camera.capture('/home/pi/Desktop/image.jpg')
+        camera.stop_preview()
+        img = cv.imread("image.jpg")
         cv.imshow("1", img)
         cv.waitKey(0)
 
+        #Cropping
         height, width = img.shape[:2]
         print("height: ", height)
         print("width: ", width)
@@ -112,8 +122,6 @@ class processingWindow(Screen):
         cv.imwrite(imageTitle, img)
         nat_2 = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
-        # cv.imshow("", nat_2)
-        # cv.waitKey(0)
 
         def gammaCorrection(src, gamma):
             invGamma = 1 / gamma
