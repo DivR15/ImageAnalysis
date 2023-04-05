@@ -182,6 +182,7 @@ windowManager:
 
 # GUI for analysis
 <analysisWindow>:
+    ultraid : ultraid
     GridLayout:
         cols: 1
         size_hint: 0.8,0.9
@@ -224,8 +225,6 @@ windowManager:
 
 # GUI for processing analysis
 <processingWindow>:
-    #VARIABLES USED IN ANALYSIS CODE (in main set with self.variablename)
-    #ultraid : ultraid
     GridLayout:
         cols: 1
         size_hint: 0.8,0.9
@@ -242,7 +241,7 @@ windowManager:
                 background_color: 0, 0.482, 0.765, 1
                 background_normal : ''
                 on_press :
-                    #root.dataanalysis()
+                    root.dataanalysis()
                     app.root.current = 'postp'
                     root.manager.transition.direction = "left"
 

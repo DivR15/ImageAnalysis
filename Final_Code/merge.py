@@ -12,8 +12,9 @@ import cv2 as cv
 import csv
 from datetime import date
 import time
-from picamera import PiCamera
+#from picamera import PiCamera
 from time import sleep
+from tabulate import tabulate
 
 
 # class to call the popup function
@@ -86,29 +87,25 @@ class logDataWindow(Screen):
 
 # class for analysis
 class processingWindow(Screen):
-
-    ultraid = ObjectProperty(None)
-
-    def dataanalysis():
-
-        #Image Capture
-        camera = PiCamera()
-        camera_start_preview()
-        sleep(5)
-        camera.capture('/home/pi/Desktop/image.jpg')
-        camera.stop_preview()
+    def dataanalysis(self):
+        ##Image Capture
+        #camera = PiCamera()
+        #camera_start_preview()
+        #sleep(5)
+        #camera.capture('/home/pi/Desktop/image.jpg')
+        #camera.stop_preview()
         img = cv.imread("image.jpg")
-        cv.imshow("1", img)
-        cv.waitKey(0)
+        # cv.imshow("1", img)
+        # cv.waitKey(0)
 
-        #Cropping
+        # Cropping
         height, width = img.shape[:2]
         print("height: ", height)
         print("width: ", width)
 
         img = img[30:430, 80:620]
-        cv.imshow("2", img)
-        cv.waitKey(0)
+        # cv.imshow("2", img)
+        # cv.waitKey(0)
 
         # Read File and Gamma Conversion.
         day = date.today()
@@ -122,7 +119,6 @@ class processingWindow(Screen):
         cv.imwrite(imageTitle, img)
         nat_2 = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
-
         def gammaCorrection(src, gamma):
             invGamma = 1 / gamma
 
@@ -133,13 +129,13 @@ class processingWindow(Screen):
 
         gamma = 0.70  # change the value here to get different result
         adjusted = gammaCorrection(nat_2, gamma=gamma)
-        cv.imshow("", adjusted)
-        cv.waitKey(0)
+        # cv.imshow("", adjusted)
+        # cv.waitKey(0)
         cv.imwrite("Threshold.jpg", adjusted)
 
         imGray = cv.cvtColor(adjusted, cv.COLOR_BGR2GRAY)
-        cv.imshow("", imGray)
-        cv.waitKey(0)
+        # cv.imshow("", imGray)
+        # cv.waitKey(0)
 
         height, width = imGray.shape[:2]
 
@@ -179,8 +175,9 @@ class processingWindow(Screen):
         a = height / 4.85
         """ for i in range(width):
             imGray[int(a), i] = 255 """
-        cv.imshow("", imGray)
-        cv.waitKey(0)
+
+        # cv.imshow("", imGray)
+        # cv.waitKey(0)
 
         # Identify the clips and draw lines
 
@@ -495,8 +492,8 @@ class processingWindow(Screen):
 
         # Display the fianl picture with all the lines.
 
-        cv.imshow("Final", imGray)
-        cv.waitKey(0)
+        # cv.imshow("Final", imGray)
+        # cv.waitKey(0)
 
         # Export the dictionary to a csv file.
 
@@ -512,14 +509,11 @@ class processingWindow(Screen):
             writer.writeheader()
             writer.writerows(dataDict)
 
-        """ table1 = [["Number", "Reagent", "Value", "Fill"], [reagentNo1, reagent1, bottle1, toFill1], [reagentNo2, reagent2, bottle2, toFill2], [reagentNo3, reagent3, bottle3, toFill3], [reagentNo4, reagent4, bottle4, toFill4]]
-        print(tabulate(table1, headers = 'firstrow', tablefmt='fancy_grid')) """
+        table1 = [["Number", "Reagent", "Value", "Fill"], [reagentNo1, reagent1, bottle1, toFill1], [reagentNo2, reagent2, bottle2, toFill2], [reagentNo3, reagent3, bottle3, toFill3], [reagentNo4, reagent4, bottle4, toFill4]]
+        print(tabulate(table1, headers = 'firstrow', tablefmt='fancy_grid'))
 
         cv.destroyAllWindows()
 
-
-
-    #INSERT ANALYSIS CODE HERE
     pass
 
 # class for post processing options
