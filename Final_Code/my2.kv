@@ -3,9 +3,7 @@ windowManager:
     signupWindow:
     logDataWindow:
     analysisWindow:
-    processingWindow:
     postpWindow:
-    dataWindow:
 
 # GUI for the login window
 <loginWindow>:
@@ -213,37 +211,17 @@ windowManager:
                 size_hint : 0.5, 0.11
                 pos_hint : {"x" : 0.32, "top" : 0.6}
             Button:
-                text : "Ready"
+                text : "Begin Analysis"
                 font_size: 22
                 size_hint : 0.3, 0.15
                 background_color: 0, 0.482, 0.765, 1
                 background_normal : ''
                 pos_hint : {"x" : 0.35, "top" : 0.25}
                 on_release:
-                    app.root.current = 'processing'
-                    root.manager.transition.direction = "left"
-
-# GUI for processing analysis
-<processingWindow>:
-    GridLayout:
-        cols: 1
-        size_hint: 0.8,0.9
-        pos: 85,25
-        Image:
-            source: 'RocheLogo.png'
-            size_hint: 1.0, 0.5
-        FloatLayout:
-            Button:
-                text : "Begin analysis"
-                font_size: 22
-                size_hint : 0.3, 0.15
-                pos_hint : {"x" : 0.35, "top" : 0.15}
-                background_color: 0, 0.482, 0.765, 1
-                background_normal : ''
-                on_press :
-                    root.dataanalysis()
+                    #root.dataanalysis()
                     app.root.current = 'postp'
                     root.manager.transition.direction = "left"
+
 
 # GUI for post processing options
 <postpWindow>:
@@ -255,37 +233,27 @@ windowManager:
             source: 'RocheLogo.png'
             size_hint: 1.0, 0.5
         FloatLayout:
-            Label:
-                size_hint : 0.8, 0.2
-                pos_hint : {"x" : 0.1, "top" : 0.9}
-                text : "ANALYSIS COMPLETE"
+            Image:
+                source: 'data_table.png'
+                size_hint : 1.0, 0.5
+                pos_hint : {"x" : 0.0, "top" : 0.90}
             Button:
                 text : "Run another analysis"
                 font_size: 22
-                size_hint : 0.3, 0.15
+                size_hint : 0.35, 0.15
                 background_color: 0, 0.482, 0.765, 1
                 background_normal : ''
-                pos_hint : {"x" : 0.35, "top" : 0.65}
+                pos_hint : {"x" : 0.33, "top" : 0.35}
                 on_release:
                     app.root.current = 'analysis'
                     root.manager.transition.direction = "left"
             Button:
-                text : "See Stored Data"
-                font_size: 22
-                size_hint : 0.3, 0.15
-                background_color: 0, 0.482, 0.765, 1
-                background_normal : ''
-                pos_hint : {"x" : 0.35, "top" : 0.4}
-                on_release:
-                    app.root.current = 'data'
-                    root.manager.transition.direction = "left"
-            Button:
                 text : "Log off"
                 font_size: 22
-                size_hint : 0.3, 0.15
+                size_hint : 0.35, 0.15
                 background_color: 0, 0.482, 0.765, 1
                 background_normal : ''
-                pos_hint : {"x" : 0.35, "top" : 0.15}
+                pos_hint : {"x" : 0.33, "top" : 0.15}
                 on_release:
                     app.root.current = 'login'
                     root.manager.transition.direction = "right"
