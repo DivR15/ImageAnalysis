@@ -94,6 +94,9 @@ class analysisWindow(Screen):
 
     pass
 
+# class for managing screens
+class dataWindow(Screen):
+    pass
 
 # class for managing screens
 class windowManager(ScreenManager):
@@ -101,7 +104,7 @@ class windowManager(ScreenManager):
 
 
 # kv file
-kv = Builder.load_file('my2.kv')
+kv = Builder.load_file('my3.kv')
 sm = windowManager()
 
 # reading all the data stored
@@ -112,6 +115,7 @@ sm.add_widget(loginWindow(name='login'))
 sm.add_widget(signupWindow(name='signup'))
 sm.add_widget(logDataWindow(name='logdata'))
 sm.add_widget(analysisWindow(name='analysis'))
+sm.add_widget(dataWindow(name='data'))
 sm.add_widget(postpWindow(name='postp'))
 
 
@@ -129,7 +133,7 @@ if __name__ == "__main__":
     pass
 
 
-kv = Builder.load_file("my2.kv")
+kv = Builder.load_file("my3.kv")
 
 
 class MyMainApp(App):
