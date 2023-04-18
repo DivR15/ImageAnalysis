@@ -75,6 +75,12 @@ plt.figtext(0.95, 0.05, footer_text, horizontalalignment='right', size=6, weight
 plt.draw()
 # Create image. plt.savefig ignores figure edge and face colors, so map them.
 fig = plt.gcf()
+plt.savefig("data",
+            #bbox='tight',
+            edgecolor=fig.get_edgecolor(),
+            facecolor=fig.get_facecolor(),
+            dpi=150
+            )
 plt.savefig(str(day) + "_" + str(time) + "_data",
             #bbox='tight',
             edgecolor=fig.get_edgecolor(),
