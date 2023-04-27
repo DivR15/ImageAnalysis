@@ -247,45 +247,38 @@ windowManager:
                 background_normal : ''
                 pos_hint : {"x" : 0.35, "top" : 0.25}
                 on_release:
-                    #root.dataanalysis()
+                    root.dataanalysis()
                     app.root.current = 'postp'
                     root.manager.transition.direction = "left"
 
 
 # GUI for post processing options
 <postpWindow>:
-    GridLayout:
-        cols: 1
-        size_hint: 0.8,0.9
-        pos: 85,25
+    FloatLayout:
         Image:
-            source: 'RocheLogo.png'
-            size_hint: 1.0, 0.5
-        FloatLayout:
-            Image:
-                source: 'data_table.png'
-                size_hint : 1.0, 0.5
-                pos_hint : {"x" : 0.0, "top" : 0.90}
-            Button:
-                text : "Run another analysis"
-                font_size: 22
-                size_hint : 0.35, 0.15
-                background_color: 0, 0.482, 0.765, 1
-                background_normal : ''
-                pos_hint : {"x" : 0.33, "top" : 0.35}
-                on_release:
-                    app.root.current = 'analysis'
-                    root.manager.transition.direction = "left"
-            Button:
-                text : "Log off"
-                font_size: 22
-                size_hint : 0.35, 0.15
-                background_color: 0, 0.482, 0.765, 1
-                background_normal : ''
-                pos_hint : {"x" : 0.33, "top" : 0.15}
-                on_release:
-                    app.root.current = 'login'
-                    root.manager.transition.direction = "right"
+            source: 'data.png'
+            size_hint: 1.0, 1.0
+            pos_hint: {"x" : 0.0, "top" : 1.1}
+        Button:
+            text : "Run another analysis"
+            font_size: 22
+            size_hint : 0.35, 0.1
+            background_color: 0, 0.482, 0.765, 1
+            background_normal : ''
+            pos_hint : {"x" : 0.33, "top" : 0.30}
+            on_release:
+                app.root.current = 'analysis'
+                root.manager.transition.direction = "left"
+        Button:
+            text : "Log off"
+            font_size: 22
+            size_hint : 0.35, 0.1
+            background_color: 0, 0.482, 0.765, 1
+            background_normal : ''
+            pos_hint : {"x" : 0.33, "top" : 0.15}
+            on_release:
+                app.root.current = 'login'
+                root.manager.transition.direction = "right"
 
 
 # GUI for pop up window
