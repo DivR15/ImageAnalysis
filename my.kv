@@ -3,7 +3,6 @@ windowManager:
     signupWindow:
     logDataWindow:
     analysisWindow:
-    processingWindow:
     postpWindow:
     dataWindow:
 
@@ -193,52 +192,33 @@ windowManager:
             Label:
                 text : "Make sure cart is aligned before beginning analysis"
                 font_size: 22
-                pos_hint : {"x" : 0.1, "top" : 0.8}
+                pos_hint : {"x" : 0.1, "top" : 0.9}
                 size_hint : 0.8, 0.2
+            Label:
+                text : "Input the name of the ULTRA to be analyzed:"
+                font_size: 22
+                pos_hint : {"x" : 0.1, "top" : 0.75}
+                size_hint : 0.8, 0.2
+            Label:
+                text : "ULTRA ID: "
+                font_size: 22
+                size_hint : 0.2, 0.1
+                pos_hint : {"x":0.15, "top":0.6}
+            TextInput:
+                id : ultraid
+                multiline : False
+                font_size: 22
+                size_hint : 0.5, 0.11
+                pos_hint : {"x" : 0.32, "top" : 0.6}
             Button:
-                text : "Ready"
+                text : "Begin analysis"
                 font_size: 22
                 size_hint : 0.3, 0.15
                 background_color: 0, 0.482, 0.765, 1
                 background_normal : ''
                 pos_hint : {"x" : 0.35, "top" : 0.25}
                 on_release:
-                    app.root.current = 'processing'
-                    root.manager.transition.direction = "left"
-
-# GUI for processing analysis
-<processingWindow>:
-    #VARIABLES USED IN ANALYSIS CODE (in main set with self.variablename)
-    #ultraid : ultraid
-    GridLayout:
-        cols: 1
-        size_hint: 0.8,0.9
-        pos: 85,25
-        Image:
-            source: 'RocheLogo.png'
-            size_hint: 1.0, 0.5
-        FloatLayout:
-            Label:
-                text : "ULTRA ID: "
-                font_size: 22
-                size_hint : 0.2, 0.1
-                pos_hint : {"x":0.15, "top":0.9}
-            #TextInput:
-                #id : ultraid
-                #multiline : False
-                #font_size: 22
-                #size_hint : 0.5, 0.11
-                #pos_hint : {"x" : 0.32, "top" : 0.9}
-
-            Button:
-                text : "Begin analysis"
-                font_size: 22
-                size_hint : 0.3, 0.15
-                pos_hint : {"x" : 0.35, "top" : 0.15}
-                background_color: 0, 0.482, 0.765, 1
-                background_normal : ''
-                on_press :
-                    #root.dataanalysis()
+                    root.dataanalysis()
                     app.root.current = 'postp'
                     root.manager.transition.direction = "left"
 
@@ -257,7 +237,7 @@ windowManager:
                 pos_hint : {"x" : 0.1, "top" : 0.9}
                 text : "ANALYSIS COMPLETE"
             Button:
-                text : "Run another analysis"
+                text : "Run new analysis"
                 font_size: 22
                 size_hint : 0.3, 0.15
                 background_color: 0, 0.482, 0.765, 1
