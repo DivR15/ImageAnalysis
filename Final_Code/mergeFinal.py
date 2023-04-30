@@ -12,7 +12,11 @@ import cv2 as cv
 import csv
 from datetime import date
 import time
-
+import pandas as pd
+from tabulate import tabulate
+import matplotlib.pyplot as plt
+from kivy.core.window import Window
+Window.size = (800, 800)
 
 
 # class to call the popup function
@@ -86,28 +90,29 @@ class logDataWindow(Screen):
 
 # class for post processing options
 class postpWindow(Screen):
-
     def dataanalysis(self):
-        img = cv.imread("CropTest4.jpg")
-        cv.imshow("1", img)
-        cv.waitKey(0)
+        # Read File and Gamma Conversion.
+
+        img = cv.imread("FAR_2.jpg")
+        # cv.imshow("1", img)
+        # cv.waitKey(0)
 
         height, width = img.shape[:2]
         print("height: ", height)
         print("width: ", width)
 
-        img = img[30:430, 80:620]
-        # cv.imshow("2", img)
-        # cv.waitKey(0)
+        img = img[30:430, 130:690]
+        cv.imshow("2", img)
+        cv.waitKey(0)
 
         # Read File and Gamma Conversion.
         day = date.today()
         day = day.strftime("%m_%d_%Y")
         print(day)
-        time = time.strftime("%H_%M", time.localtime())
-        print(time)
+        time_ = time.strftime("%H_%M", time.localtime())
+        print(time_)
 
-        imageTitle = str(day) + "_" + str(time) + ".jpg"
+        imageTitle = str(day) + "_" + str(time_) + ".jpg"
         print(imageTitle)
         cv.imwrite(imageTitle, img)
         nat_2 = cv.cvtColor(img, cv.COLOR_BGR2RGB)
@@ -125,13 +130,13 @@ class postpWindow(Screen):
 
         gamma = 0.70  # change the value here to get different result
         adjusted = gammaCorrection(nat_2, gamma=gamma)
-        cv.imshow("", adjusted)
-        cv.waitKey(0)
+        # cv.imshow("", adjusted)
+        # cv.waitKey(0)
         cv.imwrite("Threshold.jpg", adjusted)
 
         imGray = cv.cvtColor(adjusted, cv.COLOR_BGR2GRAY)
-        cv.imshow("", imGray)
-        cv.waitKey(0)
+        # cv.imshow("", imGray)
+        # cv.waitKey(0)
 
         height, width = imGray.shape[:2]
 
@@ -148,7 +153,7 @@ class postpWindow(Screen):
                 break
 
         bigBRatio = int(width / 3.60)
-        smallBRatio = int(width / 6.20)
+        smallBRatio = int(width / 6.50)
         # b1Start = int(width/20)
         b1End = b2Start = b1Start + bigBRatio
         b2End = b3Start = b1End + smallBRatio
@@ -157,7 +162,7 @@ class postpWindow(Screen):
         for i in range(width):
             color = 0
             color = color + imGray[int(height / 2), width - i - 1]
-            if color >= 30:
+            if color >= 20:
                 b4End = i
         # b4End = b4Start + bigBRatio
 
@@ -171,6 +176,7 @@ class postpWindow(Screen):
         a = height / 4.85
         """ for i in range(width):
             imGray[int(a), i] = 255 """
+
         # cv.imshow("", imGray)
         # cv.waitKey(0)
 
@@ -183,7 +189,7 @@ class postpWindow(Screen):
                     for b in range(start + 1, end):
                         color = 0
                         color = color + imGray[int(a), b]
-                        if (color > 5):
+                        if (color > 10):
                             first = b - 2
                             break
 
@@ -192,7 +198,7 @@ class postpWindow(Screen):
                         if (b > first + 5):
                             color = color + imGray[int(a), b]
                             # print("color: ", color)
-                            if (color < 5):
+                            if (color < 6):
                                 second = b + 2
                                 # print("B: ", b)
                                 break
@@ -207,12 +213,12 @@ class postpWindow(Screen):
 
             return first, second
 
-        def reagentDetection(imGray, first, second, height):
-            h = int(height / 5.65)
+        def reagentDetection(img, first, second, height):
+            h = int(height / 5.85)
             pixelavg = [0, 0, 0]
             count = 0
 
-            for w in range(first + 10, second - 15):
+            for w in range(first + 10, second - 10):
                 pixelavg = pixelavg + img[h, w]
                 img[h, w] = [0, 0, 0]
                 count += 1
@@ -221,16 +227,16 @@ class postpWindow(Screen):
             b, g, r = pixelavg
             print("r: ", int(r), "g: ", int(g), "b: ", int(b))
 
-            if (r > 55) and (r < 70) and (g > 100) and (g < 115) and (b > 55) and (b < 70):
+            if (r >= 35) and (r <= 65) and (g >= 90) and (g <= 140) and (b >= 50) and (b <= 85):
                 reagentNo = 4
                 reagent = "Reaction Buffer"
-            elif (r > 0) and (r < 20) and (g > 70) and (g < 85) and (b > 30) and (b < 45):
+            elif (r >= 0) and (r <= 20) and (g >= 65) and (g <= 100) and (b >= 30) and (b <= 60):
                 reagentNo = 5
                 reagent = "Ultra CC1"
-            elif (r > 100) and (r < 115) and (g > 60) and (g < 75) and (b > 30) and (b < 45):
+            elif (r >= 60) and (r <= 130) and (g >= 20) and (g <= 55) and (b >= 10) and (b <= 40):
                 reagentNo = 6
                 reagent = "Ultra CC2"
-            elif (r > 15) and (r < 30) and (g > 55) and (g < 70) and (b > 20) and (b < 35):
+            elif (r >= 5) and (r <= 35) and (g >= 30) and (g <= 80) and (b >= 10) and (b <= 45):
                 reagentNo = 7
                 reagent = "Option"
             else:
@@ -256,12 +262,10 @@ class postpWindow(Screen):
                 # print("avgInt: ", avgInt)
                 # print("avgInt0 = ", avgInt0)
 
-                if (avgInt >= 10):
+                if (avgInt >= 15):
                     bottom = j - 5
-                    avgInt0 = 0
+
                     break
-                else:
-                    avgInt0 = avgInt
 
             pixelInt1 = 0
             pixelCount = 0
@@ -269,7 +273,7 @@ class postpWindow(Screen):
             pixelInt2 = 0
 
             for j in range(height):
-                if (j >= bottom + 75):
+                if (j >= bottom + 55):
                     pixelCount = 0
                     pixelInt1 = 0
                     pixelCount2 = 0
@@ -279,8 +283,7 @@ class postpWindow(Screen):
                             if (imGray[height - (j + 1), i] >= 20) and (imGray[height - (j + 1), i] <= 120):
                                 pixelInt1 = pixelInt1 + imGray[height - (j + 1), i]
                                 pixelCount = pixelCount + 1
-                            if (imGray[height - ((j + 10) + 1), i] >= 20) and (
-                                    imGray[height - ((j + 10) + 1), i] <= 120):
+                            if (imGray[height - ((j + 5) + 1), i] >= 20) and (imGray[height - ((j + 5) + 1), i] <= 120):
                                 pixelInt2 = pixelInt2 + imGray[height - ((j + 5) + 1), i]
                                 pixelCount2 = pixelCount2 + 1
 
@@ -290,8 +293,8 @@ class postpWindow(Screen):
 
                     diff = abs(avgInt2 - avgInt1)
                     # print("Diff: ", diff)
-                    if (diff >= 1.5):
-                        top = j + 5
+                    if (diff >= 3):
+                        top = j + 10
                         break
 
             pixelInt1 = 0
@@ -303,15 +306,16 @@ class postpWindow(Screen):
                     pixelCount = 0
                     pixelInt1 = 0
                     for i in range(start + 1, end):
-                        pixelInt1 = pixelInt1 + imGray[height - (j + 1), i]
-                        pixelCount = pixelCount + 1
+                        if (i < first - 5) or (i > second + 5):
+                            pixelInt1 = pixelInt1 + imGray[height - (j + 1), i]
+                            pixelCount = pixelCount + 1
 
                     avgInt = pixelInt1 / pixelCount
                     # print("avgInt: ", avgInt)
                     # print("avgInt0 = ", avgInt0)
 
-                    if (avgInt <= 20):
-                        bottleTop = j - 25
+                    if (avgInt <= 10):
+                        bottleTop = j - 30
                         avgInt0 = 0
                         break
                     else:
@@ -320,7 +324,7 @@ class postpWindow(Screen):
             for i in range(start + 1, end):
                 imGray[height - (bottom + 1), i] = 255
                 imGray[height - (top + 1), i] = 255
-                imGray[height - (bottleTop + 1), i] = 255
+                imGray[height - (bottleTop + 1), i] = 0
 
             pixelHeight = top - bottom
             bottleHeight = bottleTop - bottom
@@ -329,14 +333,15 @@ class postpWindow(Screen):
 
             heightRatio = 17 / bottleHeight
             fluidHeight = pixelHeight * heightRatio
-            fluidVolume = int((389.2 * fluidHeight) - 224.41)
+            fluidVolume = int((385 * fluidHeight) - 226.73)
 
             print("Fluid Volume: ", fluidVolume, "ml")
+            print("Fluid Height: ", fluidHeight)
             print("width: ", width)
             print("Height: ", height)
 
-            if fluidVolume < 1500:
-                fluidVolume = "Needs to be filled"
+            if fluidVolume <= 1200:
+                fluidVolume = "Unable to analyze. Volume might be too low or too high"
 
             return fluidVolume
 
@@ -356,7 +361,7 @@ class postpWindow(Screen):
                 # print("avgInt: ", avgInt)
                 # print("avgInt0 = ", avgInt0)
 
-                if (avgInt >= 12):
+                if (avgInt >= 25):
                     bottom = j - 5
                     # print("Bottom: ", bottom)
                     avgInt0 = 0
@@ -370,7 +375,7 @@ class postpWindow(Screen):
             pixelInt2 = 0
 
             for j in range(height):
-                if (j >= bottom + 80):
+                if (j >= bottom + 55):
                     pixelCount = 0
                     pixelInt1 = 0
                     pixelInt2 = 0
@@ -391,8 +396,8 @@ class postpWindow(Screen):
 
                     diff = abs(avgInt2 - avgInt1)
                     # print("Diff: ", diff)
-                    if (diff >= 1.5):
-                        top = j + 5
+                    if (diff >= 2.3):
+                        top = j + 10
                         break
 
             pixelInt1 = 0
@@ -404,14 +409,15 @@ class postpWindow(Screen):
                     pixelCount = 0
                     pixelInt1 = 0
                     for i in range(start + 1, end):
-                        pixelInt1 = pixelInt1 + imGray[height - (j + 1), i]
-                        pixelCount = pixelCount + 1
+                        if (i < first) or (i > second):
+                            pixelInt1 = pixelInt1 + imGray[height - (j + 1), i]
+                            pixelCount = pixelCount + 1
 
                     avgInt = pixelInt1 / pixelCount
                     # print("avgInt: ", avgInt)
                     # print("avgInt0 = ", avgInt0)
 
-                    if (avgInt <= 20):
+                    if (avgInt <= 10):
                         bottleTop = j - 25
                         avgInt0 = 0
                         break
@@ -421,7 +427,7 @@ class postpWindow(Screen):
             for i in range(start + 1, end):
                 imGray[height - (bottom + 1), i] = 255
                 imGray[height - (top + 1), i] = 255
-                imGray[height - (bottleTop + 1), i] = 255
+                imGray[height - (bottleTop + 1), i] = 0
 
             pixelHeight = top - bottom
             bottleHeight = bottleTop - bottom
@@ -430,108 +436,149 @@ class postpWindow(Screen):
 
             heightRatio = 18 / bottleHeight
             fluidHeight = pixelHeight * heightRatio
-            fluidVolume = int((166.67 * fluidHeight))
+            fluidVolume = int((165.9 * fluidHeight) + 32.43)
 
             print("Fluid Volume: ", fluidVolume, "ml")
+            print("Fluid Height: ", fluidHeight)
 
-            if fluidVolume < 750:
-                fluidVolume = "Needs to be filled"
+            if fluidVolume <= 650:
+                fluidVolume = "Unable to analyze. Volume might be too low or too high"
 
             return fluidVolume
 
         # Based on width of each bottle, run the big or small fluid detction function.
 
-        clip1S, clip1E = clips(imGray, width, height, b1Start, b1End)
-        bottle1 = bigBottleDetection(imGray, height, b1Start, b1End, clip1S, clip1E)
-        reagentNo1, reagent1 = reagentDetection(clip1S, clip1E, height)
-        if type(bottle1) != str:
-            toFill1 = 4800 - int(bottle1)
-        else:
+        try:
+            clip1S, clip1E = clips(imGray, width, height, b1Start, b1End)
+            reagentNo1, reagent1 = reagentDetection(img, clip1S, clip1E, height)
+            bottle1 = bigBottleDetection(imGray, height, b1Start, b1End, clip1S, clip1E)
+            if type(bottle1) != str:
+                toFill1 = 4800 - int(bottle1)
+                if toFill1 < 0:
+                    toFill1 = "No Need to Fill"
+
+            else:
+                toFill1 = "Upto 4800 ml"
+
+        except (IndexError, UnboundLocalError) as error:
+            clip1S, clip1E = clips(imGray, width, height, b1Start, b1End)
+            reagentNo1, reagent1 = reagentDetection(img, clip1S, clip1E, height)
+            bottle1 = "Unable to analyze. Volume might be too low or too high"
             toFill1 = "Upto 4800 ml"
 
-        # cv.imshow("Final", imGray)
-        # cv.waitKey(0)
+            # cv.imshow("Final", imGray)
+            # cv.waitKey(0)
 
-        clip2S, clip2E = clips(imGray, width, height, b2Start, b2End)
-        bottle2 = smallBottleDetection(imGray, height, b2Start, b2End, clip2S, clip2E)
-        reagentNo2, reagent2 = reagentDetection(clip2S, clip2E, height)
-        if type(bottle2) != str:
-            toFill2 = 2400 - int(bottle2)
-        else:
+        try:
+            clip2S, clip2E = clips(imGray, width, height, b2Start, b2End)
+            bottle2 = smallBottleDetection(imGray, height, b2Start, b2End, clip2S, clip2E)
+            reagentNo2, reagent2 = reagentDetection(img, clip2S, clip2E, height)
+            if type(bottle2) != str:
+                toFill2 = 2400 - int(bottle2)
+                if toFill2 < 0:
+                    toFill2 = "No Need to Fill"
+            else:
+                toFill2 = "Upto 2400 ml"
+
+        except (IndexError, UnboundLocalError) as error:
+            clip2S, clip2E = clips(imGray, width, height, b2Start, b2End)
+            reagentNo2, reagent2 = reagentDetection(img, clip2S, clip2E, height)
+            bottle2 = "Unable to analyze. Volume might be too low or too high"
             toFill2 = "Upto 2400 ml"
 
         # cv.imshow("Final", imGray)
         # cv.waitKey(0)
 
-        clip3S, clip3E = clips(imGray, width, height, b3Start, b3End)
-        bottle3 = smallBottleDetection(imGray, height, b3Start, b3End, clip3S, clip3E)
-        reagentNo3, reagent3 = reagentDetection(clip3S, clip3E, height)
-        if type(bottle3) != str:
-            toFill3 = 2400 - int(bottle3)
-        else:
+        try:
+            clip3S, clip3E = clips(imGray, width, height, b3Start, b3End)
+            bottle3 = smallBottleDetection(imGray, height, b3Start, b3End, clip3S, clip3E)
+            reagentNo3, reagent3 = reagentDetection(img, clip3S, clip3E, height)
+            if type(bottle3) != str:
+                toFill3 = 2400 - int(bottle3)
+                if toFill3 < 0:
+                    toFill3 = "No Need to Fill"
+            else:
+                toFill3 = "Upto 2400 ml"
+
+        except (IndexError, UnboundLocalError) as error:
+            clip3S, clip3E = clips(imGray, width, height, b3Start, b3End)
+            reagentNo3, reagent3 = reagentDetection(img, clip3S, clip3E, height)
+            bottle3 = "Unable to analyze. Volume might be too low or too high"
             toFill3 = "Upto 2400 ml"
 
         # cv.imshow("Final", imGray)
         # cv.waitKey(0)
 
-        clip4S, clip4E = clips(imGray, width, height, b4Start, b4End)
-        bottle4 = bigBottleDetection(imGray, height, b4Start, b4End, clip4S, clip4E)
-        reagentNo4, reagent4 = reagentDetection(clip4S, clip4E, height)
-        if type(bottle4) != str:
-            toFill4 = 4800 - int(bottle4)
-        else:
-            toFill4 = "Upto 4800 ml"
+        try:
+            clip4S, clip4E = clips(imGray, width, height, b4Start, b4End)
+            bottle4 = bigBottleDetection(imGray, height, b4Start, b4End, clip4S, clip4E)
+            reagentNo4, reagent4 = reagentDetection(img, clip4S, clip4E, height)
+            if type(bottle4) != str:
+                toFill4 = 4800 - int(bottle4)
+                if toFill4 < 0:
+                    toFill4 = "No Need to Fill"
+            else:
+                toFill4 = "Upto 4800 ml"
 
+        except (IndexError, UnboundLocalError) as error:
+            clip4S, clip4E = clips(imGray, width, height, b4Start, b4End)
+            reagentNo4, reagent4 = reagentDetection(img, clip4S, clip4E, height)
+            bottle4 = "Unable to analyze. Volume might be too low or too high"
+            toFill4 = "Upto 4800 ml"
         # cv.imshow("Final", imGray)
         # cv.waitKey(0)
 
-        # Display the fianl picture with all the lines.
+        # Display the final picture with all the lines.
 
         cv.imshow("Final", imGray)
         cv.waitKey(0)
 
         # Export the dictionary to a csv file.
 
-        header = ["Number", "Reagent", "Value", "Fill"]
-        dataDict = [{"Number": reagentNo1, "Reagent": reagent1, "Value": bottle1, "Fill": toFill1},
-                    {"Number": reagentNo2, "Reagent": reagent2, "Value": bottle2, "Fill": toFill2},
-                    {"Number": reagentNo3, "Reagent": reagent3, "Value": bottle3, "Fill": toFill3},
-                    {"Number": reagentNo4, "Reagent": reagent4, "Value": bottle4, "Fill": toFill4}]
+        dataDict = {
+            "Date": [day] * 4,
+            "Time": [time.strftime("%H:%M", time.localtime())] * 4,
+            "Number": [reagentNo1, reagentNo2, reagentNo3, reagentNo4],
+            "Reagent": [reagent1, reagent2, reagent3, reagent4],
+            "Value": [bottle1, bottle2, bottle3, bottle4],
+            "Fill": [toFill1, toFill2, toFill3, toFill4]
+        }
 
         filename = "ULTRABulkReagents_Data.csv"
-        with open(filename, "w") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=header)
-            writer.writeheader()
-            writer.writerows(dataDict)
+        df = pd.DataFrame(dataDict)
+        df.to_csv("ULTRABulkReagents_Data.csv", mode="a", index=False, header=True)
+        table1 = [["Number", "Reagent", "Value", "Fill"], [reagentNo1, reagent1, bottle1, toFill1],
+                  [reagentNo2, reagent2, bottle2, toFill2], [reagentNo3, reagent3, bottle3, toFill3],
+                  [reagentNo4, reagent4, bottle4, toFill4]]
+        print(tabulate(table1, headers='firstrow', tablefmt='fancy_grid'))
 
-        """ table1 = [["Number", "Reagent", "Value", "Fill"], [reagentNo1, reagent1, bottle1, toFill1], [reagentNo2, reagent2, bottle2, toFill2], [reagentNo3, reagent3, bottle3, toFill3], [reagentNo4, reagent4, bottle4, toFill4]]
-        print(tabulate(table1, headers = 'firstrow', tablefmt='fancy_grid')) """
-
-        #MAKING DATA FIGURE
         title_text = 'Fluid Volume Data'
         footer_text = str(day) + "_" + str(time) + "_data"
         fig_background_color = 'black'
         fig_border = 'white'
 
-        data = [[reagent1, reagent2, reagent3, reagent4],
-                ['Measured', bottle1, bottle2, bottle3, bottle4],
-                ['To be filled', toFill1, toFill2, toFill3, toFill4]]
+        data = [['Measured (mL)', 'To be filled (mL)'],
+                [reagent1, bottle1, toFill1],
+                [reagent2, bottle2, toFill2],
+                [reagent3, bottle3, toFill3],
+                [reagent4, bottle4, toFill4],
+                ]
 
         column_headers = data.pop(0)
         row_headers = [x.pop(0) for x in data]
 
         cell_text = []
         for row in data:
-            cell_text.append([f'{x / 1000:1.1f}' for x in row])
+            cell_text.append([str(x) for x in row])
 
         # Create the figure. Setting a small pad on tight_layout
         # seems to better regulate white space. Sometimes experimenting
         # with an explicit figsize here can produce better outcome.
-        plt.figure(linewidth=2,
+        plt.figure(linewidth=1,
                    edgecolor=fig_border,
                    facecolor=fig_background_color,
-                   tight_layout={'pad': 1},
-                   # figsize=(5,3)
+                   # tight_layout={'pad':2},
+                   figsize=(4, 5)
                    )
 
         # Get some lists of color specs for row and column headers
@@ -565,14 +612,23 @@ class postpWindow(Screen):
         plt.draw()
         # Create image. plt.savefig ignores figure edge and face colors, so map them.
         fig = plt.gcf()
-        plt.savefig(str(day) + "_" + str(time) + "_data",
+        plt.savefig("data",
+                    # bbox='tight',
+                    edgecolor=fig.get_edgecolor(),
+                    facecolor=fig.get_facecolor(),
+                    dpi=150
+                    )
+        plt.savefig(str(day) + "_" + str(time_) + "_data",
                     # bbox='tight',
                     edgecolor=fig.get_edgecolor(),
                     facecolor=fig.get_facecolor(),
                     dpi=150
                     )
 
+        plt.show()
         cv.destroyAllWindows()
+
+
 
     pass
 
