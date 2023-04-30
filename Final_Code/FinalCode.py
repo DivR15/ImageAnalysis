@@ -10,19 +10,20 @@ import cv2 as cv
 import csv
 from datetime import date
 import time
-#from tabulate import tabulate
+import pandas as pd
+from tabulate import tabulate
 
 # Read File and Gamma Conversion.
 
-img = cv.imread("CropTest4.jpg")
-cv.imshow("1", img)
-cv.waitKey(0)
+img = cv.imread("FARTest2B1S.jpg")
+#cv.imshow("1", img)
+#cv.waitKey(0)
 
 height, width = img.shape[:2]
 print("height: ", height)
 print("width: ", width)
 
-img = img[30:430, 80:620]
+img = img[30:430, 100:660]
 cv.imshow("2", img)
 cv.waitKey(0)
 
@@ -30,10 +31,10 @@ cv.waitKey(0)
 day = date.today()
 day = day.strftime("%m_%d_%Y")
 print(day)
-time = time.strftime("%H_%M", time.localtime())
-print(time)
+time_ = time.strftime("%H_%M", time.localtime())
+print(time_)
 
-imageTitle = str(day) + "_" + str(time) + ".jpg"
+imageTitle = str(day) + "_" + str(time_) + ".jpg"
 print(imageTitle)
 cv.imwrite(imageTitle, img)
 nat_2 = cv.cvtColor(img, cv.COLOR_BGR2RGB)
@@ -50,13 +51,13 @@ def gammaCorrection(src, gamma):
 
 gamma = 0.70      # change the value here to get different result
 adjusted = gammaCorrection(nat_2, gamma=gamma)
-cv.imshow("", adjusted)
-cv.waitKey(0)
+#cv.imshow("", adjusted)
+#cv.waitKey(0)
 cv.imwrite("Threshold.jpg", adjusted)
 
 imGray = cv.cvtColor(adjusted, cv.COLOR_BGR2GRAY)
-cv.imshow("", imGray)
-cv.waitKey(0)
+#cv.imshow("", imGray)
+#cv.waitKey(0)
 
 height, width= imGray.shape[:2]
 
@@ -73,7 +74,7 @@ for i in range(width):
         break
 
 bigBRatio = int(width/3.60)
-smallBRatio = int(width/6.20)
+smallBRatio = int(width/6.50)
 # b1Start = int(width/20)
 b1End = b2Start = b1Start + bigBRatio
 b2End = b3Start = b1End + smallBRatio
@@ -93,22 +94,22 @@ for i in range(height):
     imGray[i, b3End] = 255
     imGray[i, b4End] = 255
 
-a = height/4.85
+a = height/4.65
 """ for i in range(width):
     imGray[int(a), i] = 255 """
-cv.imshow("", imGray)
-cv.waitKey(0)
+#cv.imshow("", imGray)
+#cv.waitKey(0)
 
 # Identify the clips and draw lines
 
-def clips(width, height, start, end):
+def clips(imGray, width, height, start, end):
     a = height/4.85
     for i in range(width):
         if (i > start) and (i < end):
             for b in range(start+1, end):
                 color = 0
                 color = color + imGray[int(a), b]
-                if (color > 5):
+                if (color > 6):
                     first = b - 2
                     break
 
@@ -117,7 +118,7 @@ def clips(width, height, start, end):
                 if (b > first + 5):
                     color = color + imGray[int(a), b]
                     # print("color: ", color)
-                    if (color < 5):
+                    if (color < 6):
                         second = b + 2
                         #print("B: ", b)
                         break
@@ -132,8 +133,8 @@ def clips(width, height, start, end):
     
     return first, second
 
-def reagentDetection(first, second, height):
-    h = int(height/5.65)
+def reagentDetection(img, first, second, height):
+    h = int(height/5.85)
     pixelavg = [0,0,0]
     count = 0
 
@@ -146,16 +147,16 @@ def reagentDetection(first, second, height):
     b, g, r = pixelavg
     print("r: ", int(r), "g: ", int(g), "b: ", int(b))
 
-    if (r > 55) and (r < 70) and (g > 100) and (g < 115) and (b > 55) and (b < 70):
+    if (r > 35) and (r < 60) and (g > 90) and (g < 120) and (b > 50) and (b < 75):
         reagentNo = 4
         reagent = "Reaction Buffer"
-    elif (r > 0) and (r < 20) and (g > 70) and (g < 85) and (b > 30) and (b < 45):
+    elif (r > 0) and (r < 20) and (g > 65) and (g < 80) and (b > 30) and (b < 50):
         reagentNo = 5
         reagent = "Ultra CC1"
-    elif (r > 100) and (r < 115) and (g > 60) and (g < 75) and (b > 30) and (b < 45):
+    elif (r > 90) and (r < 110) and (g > 30) and (g < 45) and (b > 20) and (b < 35):
         reagentNo = 6
         reagent = "Ultra CC2"
-    elif (r > 15) and (r < 30) and (g > 55) and (g < 70) and (b > 20) and (b < 35):
+    elif (r > 5) and (r < 35) and (g > 30) and (g < 80) and (b > 10) and (b < 45):
         reagentNo = 7
         reagent = "Option"
     else:
@@ -169,7 +170,7 @@ def reagentDetection(first, second, height):
 
 # DEFINE FUNCTION: If the bottle width is corresponding to the big bottle, run the fluid detection for big bottle. Save the values in a dictionary and draw the lines.
 
-def bigBottleDetection(height, start, end, first, second):
+def bigBottleDetection(imGray, height, start, end, first, second):
     for j in range(10, height):
         pixelCount = 0
         pixelInt1 = 0
@@ -214,8 +215,8 @@ def bigBottleDetection(height, start, end, first, second):
             
             diff = abs(avgInt2 - avgInt1)
             #print("Diff: ", diff)
-            if (diff >= 1.5):
-                top = j + 5
+            if (diff >= 2):
+                top = j + 10
                 break
 
     pixelInt1 = 0
@@ -227,15 +228,16 @@ def bigBottleDetection(height, start, end, first, second):
             pixelCount = 0
             pixelInt1 = 0
             for i in range(start+1, end):
-                pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
-                pixelCount = pixelCount + 1
+                if (i < first - 5) or (i > second + 5):
+                    pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
+                    pixelCount = pixelCount + 1
 
             avgInt = pixelInt1 / pixelCount
             #print("avgInt: ", avgInt)
             #print("avgInt0 = ", avgInt0)
 
-            if (avgInt <= 20):
-                bottleTop = j - 25
+            if (avgInt <= 10):
+                bottleTop = j - 30
                 avgInt0 = 0
                 break
             else:
@@ -244,7 +246,7 @@ def bigBottleDetection(height, start, end, first, second):
     for i in range(start+1, end):
         imGray[height - (bottom + 1), i] = 255
         imGray[height - (top + 1), i] = 255
-        imGray[height - (bottleTop + 1), i] = 255
+        imGray[height - (bottleTop + 1), i] = 0
 
     pixelHeight = top - bottom
     bottleHeight = bottleTop - bottom
@@ -253,9 +255,10 @@ def bigBottleDetection(height, start, end, first, second):
 
     heightRatio = 17/bottleHeight
     fluidHeight = pixelHeight * heightRatio
-    fluidVolume = int((389.2 * fluidHeight) - 224.41)
+    fluidVolume = int((353 * fluidHeight))
 
     print("Fluid Volume: ", fluidVolume, "ml")
+    print("Fluid Height: ", fluidHeight )
     print("width: ", width)
     print("Height: ", height)
 
@@ -267,7 +270,7 @@ def bigBottleDetection(height, start, end, first, second):
 
 # DEFINE FUNCTION:Repeat the same for the small bottle with the small bottle code.
 
-def smallBottleDetection(height, start, end, first, second):
+def smallBottleDetection(imGray, height, start, end, first, second):
     avgInt0 = 0
     for j in range(height):
         pixelCount = 0
@@ -315,8 +318,8 @@ def smallBottleDetection(height, start, end, first, second):
             
             diff = abs(avgInt2 - avgInt1)
             #print("Diff: ", diff)
-            if (diff >= 1.5):
-                top = j + 5
+            if (diff >= 1.7):
+                top = j + 10
                 break
             
     pixelInt1 = 0
@@ -328,14 +331,15 @@ def smallBottleDetection(height, start, end, first, second):
             pixelCount = 0
             pixelInt1 = 0
             for i in range(start+1, end):
-                pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
-                pixelCount = pixelCount + 1
+                if (i < first) or (i > second):
+                    pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
+                    pixelCount = pixelCount + 1
 
             avgInt = pixelInt1 / pixelCount
             #print("avgInt: ", avgInt)
             #print("avgInt0 = ", avgInt0)
 
-            if (avgInt <= 20):
+            if (avgInt <= 10):
                 bottleTop = j - 25
                 avgInt0 = 0
                 break
@@ -345,7 +349,7 @@ def smallBottleDetection(height, start, end, first, second):
     for i in range(start+1, end):
         imGray[height - (bottom + 1), i] = 255
         imGray[height - (top + 1), i] = 255
-        imGray[height - (bottleTop + 1), i] = 255
+        imGray[height - (bottleTop + 1), i] = 0
 
     pixelHeight = top - bottom
     bottleHeight = bottleTop - bottom
@@ -365,70 +369,84 @@ def smallBottleDetection(height, start, end, first, second):
 
 # Based on width of each bottle, run the big or small fluid detction function.
 
-clip1S, clip1E = clips(width,height,b1Start,b1End)
-bottle1 = bigBottleDetection(height, b1Start, b1End, clip1S, clip1E)
-reagentNo1, reagent1 = reagentDetection(clip1S, clip1E, height)
-if type(bottle1) != str:
-    toFill1 = 4800 - int(bottle1)
-else:
-    toFill1 = "Upto 4800 ml"
+try:
+    clip1S, clip1E = clips(imGray, width,height,b1Start,b1End)
+    bottle1 = bigBottleDetection(imGray, height, b1Start, b1End, clip1S, clip1E)
+    reagentNo1, reagent1 = reagentDetection(img, clip1S, clip1E, height)
+    if type(bottle1) != str:
+        toFill1 = 4800 - int(bottle1)
+        if toFill1 < 0:
+            toFill1 = "No Need to Fill"
 
-#cv.imshow("Final", imGray)
-#cv.waitKey(0)
+    else:
+        toFill1 = "Upto 4800 ml"
 
-clip2S, clip2E = clips(width,height,b2Start,b2End)
-bottle2 = smallBottleDetection(height, b2Start, b2End, clip2S, clip2E)
-reagentNo2, reagent2 = reagentDetection(clip2S, clip2E, height)
-if type(bottle2) != str:
-    toFill2 = 2400 - int(bottle2)
-else:
-    toFill2 = "Upto 2400 ml"
+    #cv.imshow("Final", imGray)
+    #cv.waitKey(0)
 
-#cv.imshow("Final", imGray)
-#cv.waitKey(0)
+    clip2S, clip2E = clips(imGray, width,height,b2Start,b2End)
+    bottle2 = smallBottleDetection(imGray, height, b2Start, b2End, clip2S, clip2E)
+    reagentNo2, reagent2 = reagentDetection(img, clip2S, clip2E, height)
+    if type(bottle2) != str:
+        toFill2 = 2400 - int(bottle2)
+        if toFill2 < 0:
+            toFill2 = "No Need to Fill"
+    else:
+        toFill2 = "Upto 2400 ml"
 
-clip3S, clip3E = clips(width,height,b3Start,b3End)
-bottle3 = smallBottleDetection(height, b3Start, b3End, clip3S, clip3E)
-reagentNo3, reagent3 = reagentDetection(clip3S, clip3E, height)
-if type(bottle3) != str:
-    toFill3 = 2400 - int(bottle3)
-else:
-    toFill3 = "Upto 2400 ml"
+    #cv.imshow("Final", imGray)
+    #cv.waitKey(0)
 
-#cv.imshow("Final", imGray)
-#cv.waitKey(0)
+    clip3S, clip3E = clips(imGray, width,height,b3Start,b3End)
+    bottle3 = smallBottleDetection(imGray, height, b3Start, b3End, clip3S, clip3E)
+    reagentNo3, reagent3 = reagentDetection(img, clip3S, clip3E, height)
+    if type(bottle3) != str:
+        toFill3 = 2400 - int(bottle3)
+        if toFill3 < 0:
+            toFill3 = "No Need to Fill"
+    else:
+        toFill3 = "Upto 2400 ml"
 
-clip4S, clip4E = clips(width,height,b4Start,b4End)
-bottle4 = bigBottleDetection(height, b4Start, b4End, clip4S, clip4E)
-reagentNo4, reagent4 = reagentDetection(clip4S, clip4E, height)
-if type(bottle4) != str:
-    toFill4 = 4800 - int(bottle4)
-else:
-    toFill4 = "Upto 4800 ml"
+    #cv.imshow("Final", imGray)
+    #cv.waitKey(0)
 
-#cv.imshow("Final", imGray)
-#cv.waitKey(0)
+    clip4S, clip4E = clips(imGray, width,height,b4Start,b4End)
+    bottle4 = bigBottleDetection(imGray, height, b4Start, b4End, clip4S, clip4E)
+    reagentNo4, reagent4 = reagentDetection(img, clip4S, clip4E, height)
+    if type(bottle4) != str:
+        toFill4 = 4800 - int(bottle4)
+        if toFill4 < 0:
+            toFill4 = "No Need to Fill"
+    else:
+        toFill4 = "Upto 4800 ml"
 
-# Display the fianl picture with all the lines.
+    #cv.imshow("Final", imGray)
+    #cv.waitKey(0)
 
-cv.imshow("Final", imGray)
-cv.waitKey(0)
+    # Display the final picture with all the lines.
 
-# Export the dictionary to a csv file.
+    cv.imshow("Final", imGray)
+    cv.waitKey(0)
 
-header = ["Number", "Reagent", "Value", "Fill"]
-dataDict =  [{"Number": reagentNo1, "Reagent": reagent1, "Value" : bottle1, "Fill" : toFill1 },
-{"Number": reagentNo2, "Reagent": reagent2, "Value" : bottle2, "Fill" : toFill2}, 
-{"Number": reagentNo3, "Reagent": reagent3, "Value" : bottle3, "Fill" : toFill3}, 
-{"Number": reagentNo4, "Reagent": reagent4, "Value" : bottle4, "Fill" : toFill4}]
+    # Export the dictionary to a csv file.
+ 
+    dataDict = {
+        "Date": [day] * 4,
+        "Time": [time.strftime("%H:%M", time.localtime())] * 4,
+        "Number": [reagentNo1, reagentNo2, reagentNo3, reagentNo4],
+        "Reagent": [reagent1, reagent2, reagent3, reagent4],
+        "Value": [bottle1, bottle2, bottle3, bottle4],
+        "Fill": [toFill1, toFill2, toFill3, toFill4]
+    }
+    filename = "ULTRABulkReagents_Data.csv"
+    df = pd.DataFrame(dataDict)
+    df.to_csv("ULTRABulkReagents_Data.csv", mode = "a", index=False, header=True)
 
-filename = "ULTRABulkReagents_Data.csv"
-with open(filename, "w") as csvfile:
-    writer = csv.DictWriter(csvfile, fieldnames=header)
-    writer.writeheader()
-    writer.writerows(dataDict)
 
-""" table1 = [["Number", "Reagent", "Value", "Fill"], [reagentNo1, reagent1, bottle1, toFill1], [reagentNo2, reagent2, bottle2, toFill2], [reagentNo3, reagent3, bottle3, toFill3], [reagentNo4, reagent4, bottle4, toFill4]]
-print(tabulate(table1, headers = 'firstrow', tablefmt='fancy_grid')) """
+    table1 = [["Number", "Reagent", "Value", "Fill"], [reagentNo1, reagent1, bottle1, toFill1], [reagentNo2, reagent2, bottle2, toFill2], [reagentNo3, reagent3, bottle3, toFill3], [reagentNo4, reagent4, bottle4, toFill4]]
+    print(tabulate(table1, headers = 'firstrow', tablefmt='fancy_grid'))
+
+except IndexError:
+    print("Unable to analyze. Volume might be too low")
 
 cv.destroyAllWindows()
