@@ -6,23 +6,25 @@ from kivy.lang import Builder
 from kivy.uix.popup import Popup
 from kivy.uix.floatlayout import FloatLayout
 import pandas as pd
-import os
+import  os
 import numpy as np
 import cv2 as cv
 import csv
 from datetime import date
 import time
 import pandas as pd
-from tabulate import tabulate
-import matplotlib.pyplot as plt
+#from tabulate import tabulate
+import  matplotlib . pyplot  as  plt
 from kivy.core.window import Window
-Window.size = (800, 800)
-
+Window.size = (850, 530)
+from picamera import PiCamera 
+from time import sleep
+from pyhubctl import  PyHubCtl, Configuration
 
 # class to call the popup function
 class PopupWindow(Widget):
     def btn(self):
-        popFun()
+        popFun ()
 
 
 # class to build GUI for a popup window
@@ -47,7 +49,7 @@ class loginWindow(Screen):
 
         # validating if the email already exists
         if self.email.text not in users['Email'].unique():
-            popFun()
+            popFun ()
         else:
 
             # switching the current screen to display validation result
@@ -80,30 +82,41 @@ class signupWindow(Screen):
                 self.pwd.text = ""
         else:
             # if values are empty or invalid show pop up
-            popFun()
+            popFun ()
 
 
 # class to display validation result
 class logDataWindow(Screen):
     pass
 
-
-# class for post processing options
-class postpWindow(Screen):
+# class for analysis
+class analysisWindow(Screen):
+    ultraid = ObjectProperty(None)
     def dataanalysis(self):
+        #LIGHTS ON
+        phc = PyHubCtl()
+        phc.run(Configuration(action="1", ports="2"))
+        camera = PiCamera() 
+        sleep(2)
+        camera.capture('/home/pi/Desktop/Image Analysis/image.jpg')
         # Read File and Gamma Conversion.
 
-        img = cv.imread("FAR_2.jpg")
+        img = cv.imread("image.jpg")
         # cv.imshow("1", img)
         # cv.waitKey(0)
-
+        #LIGHTS OFF
+        phc = PyHubCtl()
+        phc.run(Configuration(action="0", ports="2"))
+        phc.run(Configuration(action="0", ports="2"))
+        
+        
         height, width = img.shape[:2]
         print("height: ", height)
         print("width: ", width)
 
         img = img[30:430, 130:690]
-        cv.imshow("2", img)
-        cv.waitKey(0)
+        #cv.imshow("2", img)
+        #cv.waitKey(0)
 
         # Read File and Gamma Conversion.
         day = date.today()
@@ -121,7 +134,7 @@ class postpWindow(Screen):
         # cv.waitKey(0)
 
         def gammaCorrection(src, gamma):
-            invGamma = 1 / gamma
+            invGamma  =  1  /  gamma
 
             table = [((i / 255) ** invGamma) * 255 for i in range(256)]
             table = np.array(table, np.uint8)
@@ -129,7 +142,7 @@ class postpWindow(Screen):
             return cv.LUT(src, table)
 
         gamma = 0.70  # change the value here to get different result
-        adjusted = gammaCorrection(nat_2, gamma=gamma)
+        adjusted  =  gammaCorrection ( nat_2 , gamma = gamma )
         # cv.imshow("", adjusted)
         # cv.waitKey(0)
         cv.imwrite("Threshold.jpg", adjusted)
@@ -145,7 +158,7 @@ class postpWindow(Screen):
 
         # Find ratio of width of the bottles and draw the vertical lines identifying each bottle.
 
-        for i in range(width):
+        for  i  in  range ( width ):
             color = 0
             color = color + imGray[int(height / 2), i]
             if color >= 20:
@@ -159,14 +172,14 @@ class postpWindow(Screen):
         b2End = b3Start = b1End + smallBRatio
         b3End = b4Start = b3Start + smallBRatio
 
-        for i in range(width):
+        for  i  in  range ( width ):
             color = 0
             color = color + imGray[int(height / 2), width - i - 1]
             if color >= 20:
                 b4End = i
         # b4End = b4Start + bigBRatio
 
-        for i in range(height):
+        for  i  in  range ( height ):
             imGray[i, b1Start] = 255
             imGray[i, b1End] = 255
             imGray[i, b2End] = 255
@@ -184,16 +197,16 @@ class postpWindow(Screen):
 
         def clips(imGray, width, height, start, end):
             a = height / 4.85
-            for i in range(width):
+            for  i  in  range ( width ):
                 if (i > start) and (i < end):
-                    for b in range(start + 1, end):
+                    for  b  in  range ( start  +  1 , end ):
                         color = 0
                         color = color + imGray[int(a), b]
-                        if (color > 10):
+                        if (color > 6):
                             first = b - 2
                             break
 
-                    for b in range(start + 1, end):
+                    for  b  in  range ( start  +  1 , end ):
                         color = 0
                         if (b > first + 5):
                             color = color + imGray[int(a), b]
@@ -207,7 +220,7 @@ class postpWindow(Screen):
             # print("END: ", end)
             # print("FIRST: ", first)
             # print("SECOND: ", second)
-            for b in range(height):
+            for  b  in  range ( height ):
                 imGray[b, first] = 255
                 imGray[b, second] = 255
 
@@ -236,7 +249,7 @@ class postpWindow(Screen):
             elif (r >= 60) and (r <= 130) and (g >= 20) and (g <= 55) and (b >= 10) and (b <= 40):
                 reagentNo = 6
                 reagent = "Ultra CC2"
-            elif (r >= 5) and (r <= 35) and (g >= 30) and (g <= 80) and (b >= 10) and (b <= 45):
+            elif (r >= 5) and (r <= 35) and (g >= 20) and (g <= 80) and (b >= 10) and (b <= 45):
                 reagentNo = 7
                 reagent = "Option"
             else:
@@ -294,7 +307,10 @@ class postpWindow(Screen):
                     diff = abs(avgInt2 - avgInt1)
                     # print("Diff: ", diff)
                     if (diff >= 3):
-                        top = j + 10
+                        if j > 250:
+                            top = j + 5
+                        else:
+                            top = j + 10
                         break
 
             pixelInt1 = 0
@@ -333,7 +349,7 @@ class postpWindow(Screen):
 
             heightRatio = 17 / bottleHeight
             fluidHeight = pixelHeight * heightRatio
-            fluidVolume = int((385 * fluidHeight) - 226.73)
+            fluidVolume = int((368.96 * fluidHeight) - 209.68)
 
             print("Fluid Volume: ", fluidVolume, "ml")
             print("Fluid Height: ", fluidHeight)
@@ -375,7 +391,7 @@ class postpWindow(Screen):
             pixelInt2 = 0
 
             for j in range(height):
-                if (j >= bottom + 55):
+                if (j >= bottom + 65):
                     pixelCount = 0
                     pixelInt1 = 0
                     pixelInt2 = 0
@@ -396,8 +412,11 @@ class postpWindow(Screen):
 
                     diff = abs(avgInt2 - avgInt1)
                     # print("Diff: ", diff)
-                    if (diff >= 2.3):
-                        top = j + 10
+                    if (diff >= 2.2):
+                        if j < 100:
+                            top = j
+                        else:
+                            top = j + 10
                         break
 
             pixelInt1 = 0
@@ -436,7 +455,7 @@ class postpWindow(Screen):
 
             heightRatio = 18 / bottleHeight
             fluidHeight = pixelHeight * heightRatio
-            fluidVolume = int((165.9 * fluidHeight) + 32.43)
+            fluidVolume = int((176.48 * fluidHeight) - 84.63)
 
             print("Fluid Volume: ", fluidVolume, "ml")
             print("Fluid Height: ", fluidHeight)
@@ -530,8 +549,8 @@ class postpWindow(Screen):
 
         # Display the final picture with all the lines.
 
-        cv.imshow("Final", imGray)
-        cv.waitKey(0)
+        #cv.imshow("Final", imGray)
+        #cv.waitKey(0)
 
         # Export the dictionary to a csv file.
 
@@ -550,7 +569,7 @@ class postpWindow(Screen):
         table1 = [["Number", "Reagent", "Value", "Fill"], [reagentNo1, reagent1, bottle1, toFill1],
                   [reagentNo2, reagent2, bottle2, toFill2], [reagentNo3, reagent3, bottle3, toFill3],
                   [reagentNo4, reagent4, bottle4, toFill4]]
-        print(tabulate(table1, headers='firstrow', tablefmt='fancy_grid'))
+        #print(tabulate(table1, headers='firstrow', tablefmt='fancy_grid'))
 
         title_text = 'Fluid Volume Data'
         footer_text = str(day) + "_" + str(time) + "_data"
@@ -578,7 +597,7 @@ class postpWindow(Screen):
                    edgecolor=fig_border,
                    facecolor=fig_background_color,
                    # tight_layout={'pad':2},
-                   figsize=(4, 5)
+                   figsize=(10, 4)
                    )
 
         # Get some lists of color specs for row and column headers
@@ -625,17 +644,15 @@ class postpWindow(Screen):
                     dpi=150
                     )
 
-        plt.show()
+        #plt.show()
+        #LIGHTS ON
+        phc.run(Configuration(action="1", ports="2"))
         cv.destroyAllWindows()
-
-
 
     pass
 
-# class for analysis
-class analysisWindow(Screen):
-    ultraid = ObjectProperty(None)
-
+# class for post processing options
+class postpWindow(Screen):
     pass
 
 # class for managing screens
