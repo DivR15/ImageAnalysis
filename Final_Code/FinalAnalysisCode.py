@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 # Read File and Gamma Conversion.
 
-img = cv.imread("FARTest4B2S_4.jpg")
+img = cv.imread("##########") # Add name and directory of image to be analyzed here
 #cv.imshow("1", img)
 #cv.waitKey(0)
 
