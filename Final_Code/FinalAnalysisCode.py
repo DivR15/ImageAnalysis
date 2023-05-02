@@ -1,0 +1,424 @@
+
+# Import Libraries
+
+import numpy as np
+import cv2 as cv 
+#from google.colab.patches import cv2_imshow # for image display
+#from skimage import io 
+#import matplotlib.pylab as plt
+import os
+import csv
+
+# Read File and Gamma Conversion.
+
+nat = cv.imread("Multi2B1S.jpg")
+nat_2 = cv.cvtColor(nat, cv.COLOR_BGR2RGB)
+cv.imshow("", nat_2)
+cv.waitKey(0)
+
+def gammaCorrection(src, gamma):
+    invGamma = 1 / gamma
+
+    table = [((i / 255) ** invGamma) * 255 for i in range(256)]
+    table = np.array(table, np.uint8)
+
+    return cv.LUT(src, table)
+
+
+gamma = 0.5      # change the value here to get different result
+adjusted = gammaCorrection(nat_2, gamma=gamma)
+cv.imshow("", adjusted)
+cv.waitKey(0)
+# directory = "C:/Users/dhrat/Desktop/UA Stuff/Sem 7/BME 498/Prototype/Image Analysis"
+# os.chdir(directory)
+cv.imwrite("Threshold.jpg", adjusted)
+
+
+imGray = cv.cvtColor(adjusted, cv.COLOR_BGR2GRAY)
+cv.imshow("", imGray)
+cv.waitKey(0)
+
+
+height, width= imGray.shape[:2]
+
+print("Height: ", height)
+print("Width: ", width)
+
+# Find ratio of width of the bottles and draw the vertical lines identifying each bottle.
+
+for i in range(width):
+    color = 0
+    color = color + imGray[int(height/2), i]
+    if color >= 10:
+        b1Start = i
+        break
+
+bigBRatio = int(width/3.65)
+smallBRatio = int(width/6.35)
+# b1Start = int(width/20)
+b1End = b2Start = b1Start + bigBRatio
+b2End = b3Start = b1End + smallBRatio
+b3End = b4Start = b3Start + smallBRatio
+
+for i in range(width):
+    color = 0
+    color = color + imGray[int(height/2), width - i - 1]
+    if color >= 30:
+        b4End = i
+# b4End = b4Start + bigBRatio
+
+for i in range(height):
+    imGray[i, b1Start] = 255
+    imGray[i, b1End] = 255
+    imGray[i, b2End] = 255
+    imGray[i, b3End] = 255
+    imGray[i, b4End] = 255
+
+a = height/4.5
+cv.imshow("", imGray)
+cv.waitKey(0)
+
+# Identify the clips and draw lines
+
+def clips(width, height, start, end):
+    a = height/4.5
+    for i in range(width):
+        if (i > start) and (i < end):
+            for b in range(start+1, end):
+                color = 0
+                color = color + imGray[int(a), b]
+                if (color > 1):
+                    first = b - 5
+                    break
+
+            for b in range(start+1, end):
+                color = 0
+                if (b > first + 5):
+                    color = color + imGray[int(a), b]
+                    # print("color: ", color)
+                    if (color < 1):
+                        second = b + 5
+                        #print("B: ", b)
+                        break
+            
+            """ for b in range(start+1, end):
+                color = 0
+                color = color + imGray[int(a), end - (b+1)]
+                # print("color: ", color)
+                if (color > 1):
+                    second = end - (b+1)
+                    print("B: ", b)
+                    break """
+        
+    # print("START: ", start)
+    # print("END: ", end)
+    # print("FIRST: ", first)
+    # print("SECOND: ", second)
+    for b in range(height):
+        imGray[b, first] = 255
+        imGray[b, second] = 255
+    
+    return first, second
+
+# DEFINE FUNCTION: If the bottle width is corresponding to the big bottle, run the fluid detection for big bottle. Save the values in a dictionary and draw the lines.
+
+def bigBottleDetection(height, start, end, first, second):
+    for j in range(10, height):
+        pixelCount = 0
+        pixelInt1 = 0
+        for i in range(start+1, end):
+            pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
+            pixelCount = pixelCount + 1
+
+        avgInt = pixelInt1 / pixelCount
+        #print("avgInt: ", avgInt)
+        #print("avgInt0 = ", avgInt0)
+
+        if (avgInt >= 5):
+            bottom = j
+            avgInt0 = 0
+            break
+        else:
+            avgInt0 = avgInt
+
+    pixelInt1 = 0
+    pixelCount = 0
+    avgInt0 = 0
+    avgIntList = []
+    avgInt10 = 0
+    Int10 = 0
+    prevInt10 = 0
+
+
+    for j in range(height):
+        if (j >= bottom + 75):
+            pixelCount = 0
+            pixelInt1 = 0
+            for i in range(start+1, end):
+                if (i < first) or (i > second):
+                    if (imGray[height - (j+1), i] >= 20) and (imGray[height - (j+1), i] <= 120) :
+                        pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
+                        pixelCount = pixelCount + 1
+            if (pixelCount != 0):
+                avgInt = pixelInt1 / pixelCount
+            # print("avgInt: ", avgInt)
+            # print("avgInt0 = ", avgInt0)
+
+            if (len(avgIntList) < 10):
+                #print("len: ", len(avgIntList))
+
+                avgIntList.append(avgInt)
+            elif(len(avgIntList) >= 10):
+                for k in range(len(avgIntList)):
+                    #print("Int: ", avgIntList[k-1])
+                    Int10 = Int10 + avgIntList[k-1]
+                    #print("Int10: ", Int10)
+                avgInt10 = Int10 / 10
+                Int10 = 0
+                avgIntList = []
+                #print("###################################################")
+
+            if (prevInt10 == 0):
+                prevInt10 = avgInt10
+            else:
+                diffInt10 = abs(avgInt10 - prevInt10)
+                print("Diff: ", diffInt10)
+                prevInt10 = avgInt10
+            
+                if (diffInt10 > 6.3):
+                    top = j
+
+                    break
+
+    pixelInt1 = 0
+    pixelCount = 0
+    avgInt0 = 0
+
+    for j in range(height):
+        if (j >= top):
+            pixelCount = 0
+            pixelInt1 = 0
+            for i in range(start+1, end):
+                pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
+                pixelCount = pixelCount + 1
+
+            avgInt = pixelInt1 / pixelCount
+            #print("avgInt: ", avgInt)
+            #print("avgInt0 = ", avgInt0)
+
+            if (avgInt <= 30):
+                bottleTop = j
+                avgInt0 = 0
+                break
+            else:
+                avgInt0 = avgInt
+
+    for i in range(start+1, end):
+        imGray[height - (bottom + 1), i] = 255
+        imGray[height - (top + 1), i] = 255
+        imGray[height - (bottleTop + 1), i] = 255
+
+    pixelHeight = top - bottom
+    bottleHeight = bottleTop - bottom
+    print("Height of Liquid: ", pixelHeight)
+    print("Height of Bottle: ", bottleHeight)
+
+    heightRatio = 17/bottleHeight
+    fluidHeight = pixelHeight * heightRatio
+    fluidVolume = (389.2 * fluidHeight) - 224.41
+
+    print("Fluid Volume: ", fluidVolume, "ml")
+    print("width: ", width)
+    print("Height: ", height)
+
+    if fluidVolume < 2000:
+        fluidVolume = "Needs to be filled"    
+
+    return fluidVolume
+
+    
+
+
+
+# DEFINE FUNCTION:Repeat the same for the small bottle with the small bottle code.
+
+def smallBottleDetection(height, start, end, first, second):
+    avgInt0 = 0
+    for j in range(height):
+        pixelCount = 0
+        pixelInt1 = 0
+        for i in range(start+1, end):
+            if (imGray[height - (j+1), i] < 255):
+                pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
+                pixelCount = pixelCount + 1
+
+        avgInt = pixelInt1 / pixelCount
+        #print("avgInt: ", avgInt)
+        #print("avgInt0 = ", avgInt0)
+
+        if (avgInt >= 5):
+            bottom = j
+            #print("Bottom: ", bottom)
+            avgInt0 = 0
+            break
+        else:
+            avgInt0 = avgInt
+
+    pixelInt1 = 0
+    pixelCount = 0
+    avgInt0 = 0
+    avgIntList = []
+    avgInt10 = 0
+    Int10 = 0
+    prevInt10 = 0
+
+
+
+    for j in range(height):
+        if (j >= bottom + 100):
+            pixelCount = 0
+            pixelInt1 = 0
+            for i in range(start+1, end):
+                if (i < first) or (i > second):
+                    if (imGray[height - (j+1), i] >= 20) and (imGray[height - (j+1), i] <= 120) :
+                        pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
+                        pixelCount = pixelCount + 1
+            if (pixelCount != 0):
+                avgInt = pixelInt1 / pixelCount
+            # print("avgInt: ", avgInt)
+            # print("avgInt0 = ", avgInt0)
+
+            if (len(avgIntList) < 10):
+                #print("len: ", len(avgIntList))
+                avgIntList.append(avgInt)
+            elif(len(avgIntList) >= 10):
+                for k in range(len(avgIntList)):
+                    #print("Int: ", avgIntList[k-1])
+                    Int10 = Int10 + avgIntList[k-1]
+                    #print("Int10: ", Int10)
+                avgInt10 = Int10 / 10
+                Int10 = 0
+                avgIntList = []
+                #print("###################################################")
+
+            if (prevInt10 == 0):
+                prevInt10 = avgInt10
+            else:
+                diffInt10 = abs(avgInt10 - prevInt10)
+                #print("Diff: ", diffInt10)
+                prevInt10 = avgInt10
+            
+                if (diffInt10 > 3):
+                    top = j
+                    break
+
+    pixelInt1 = 0
+    pixelCount = 0
+    avgInt0 = 0
+
+    for j in range(height):
+        if (j >= top):
+            pixelCount = 0
+            pixelInt1 = 0
+            for i in range(start+1, end):
+                pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
+                pixelCount = pixelCount + 1
+
+            avgInt = pixelInt1 / pixelCount
+            #print("avgInt: ", avgInt)
+            #print("avgInt0 = ", avgInt0)
+
+            if (avgInt <= 20):
+                bottleTop = j
+                avgInt0 = 0
+                break
+            else:
+                avgInt0 = avgInt
+
+    for i in range(start+1, end):
+        imGray[height - (bottom + 1), i] = 255
+        imGray[height - (top + 1), i] = 255
+        imGray[height - (bottleTop + 1), i] = 255
+
+
+    pixelHeight = top - bottom
+    bottleHeight = bottleTop - bottom
+    print("Height of Liquid: ", pixelHeight)
+    print("Height of Bottle: ", bottleHeight)
+
+    heightRatio = 18/bottleHeight
+    fluidHeight = pixelHeight * heightRatio
+    fluidVolume = (166.67 * fluidHeight)
+
+    print("Fluid Volume: ", fluidVolume, "ml")
+
+    if fluidVolume < 2000:
+        fluidVolume = "Needs to be filled"
+
+    return fluidVolume
+
+
+# Based on width of each bottle, run the big or small fluid detction function.
+
+clip1S, clip1E = clips(width,height,b1Start,b1End)
+bottle1 = bigBottleDetection(height, b1Start, b1End, clip1S, clip1E)
+if type(bottle1) != str:
+    toFill1 = 4800 - int(bottle1)
+else:
+    toFill1 = "Upto 4800 ml"
+
+cv.imshow("Final", imGray)
+cv.waitKey(0)
+
+clip2S, clip2E = clips(width,height,b2Start,b2End)
+bottle2 = smallBottleDetection(height, b2Start, b2End, clip2S, clip2E)
+if type(bottle2) != str:
+    toFill2 = 2400 - int(bottle2)
+else:
+    toFill2 = "Upto 2400 ml"
+
+cv.imshow("Final", imGray)
+cv.waitKey(0)
+
+clip3S, clip3E = clips(width,height,b3Start,b3End)
+bottle3 = smallBottleDetection(height, b3Start, b3End, clip3S, clip3E)
+if type(bottle3) != str:
+    toFill3 = 2400 - int(bottle3)
+else:
+    toFill3 = "Upto 2400 ml"
+
+cv.imshow("Final", imGray)
+cv.waitKey(0)
+
+clip4S, clip4E = clips(width,height,b4Start,b4End)
+bottle4 = bigBottleDetection(height, b4Start, b4End, clip4S, clip4E)
+if type(bottle4) != str:
+    toFill4 = 4800 - int(bottle4)
+else:
+    toFill4 = "Upto 4800 ml"
+
+cv.imshow("Final", imGray)
+cv.waitKey(0)
+
+# Display the fianl picture with all the lines.
+
+cv.imshow("Final", imGray)
+cv.waitKey(0)
+
+# Export the dictionary to a csv file.
+
+header = ["Bottle", "Value", "Fill"]
+dataDict =  [{"Bottle": 1, "Value" : bottle1, "Fill" : toFill1 },
+{"Bottle": 2, "Value" : bottle2, "Fill" : toFill2}, 
+{"Bottle": 3, "Value" : bottle3, "Fill" : toFill3}, 
+{"Bottle": 4, "Value" : bottle4, "Fill" : toFill4}]
+
+filename = "ULTRABulkReagents_Data.csv"
+with open(filename, "w") as csvfile:
+    writer = csv.DictWriter(csvfile, fieldnames=header)
+    writer.writeheader()
+    writer.writerows(dataDict)
+
+
+
+
