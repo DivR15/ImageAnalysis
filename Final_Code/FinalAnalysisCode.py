@@ -3,16 +3,13 @@
 # Fluid Level Detection and Reagent Id for Multiple Bottles
 
 # Import Libraries
-
 import numpy as np
 import cv2 as cv 
 import os
 import csv
 
-# Read File and Gamma Conversion.
-
-nat = cv.imread("FinalTest7.jpg")
-nat_2 = cv.cvtColor(nat, cv.COLOR_BGR2RGB)
+img = cv.imread("Multi2B1S.jpg")
+nat_2 = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 #cv.imshow("", nat_2)
 #cv.waitKey(0)
 
@@ -24,7 +21,7 @@ def gammaCorrection(src, gamma):
 
     return cv.LUT(src, table)
 
-gamma = 0.85      # change the value here to get different result
+gamma = 0.70      # change the value here to get different result
 adjusted = gammaCorrection(nat_2, gamma=gamma)
 cv.imshow("", adjusted)
 cv.waitKey(0)
@@ -44,12 +41,12 @@ print("Width: ", width)
 for i in range(width):
     color = 0
     color = color + imGray[int(height/2), i]
-    if color >= 20:
+    if color >= 10:
         b1Start = i
         break
 
-bigBRatio = int(width/3.55)
-smallBRatio = int(width/6.50)
+bigBRatio = int(width/3.65)
+smallBRatio = int(width/6.35)
 # b1Start = int(width/20)
 b1End = b2Start = b1Start + bigBRatio
 b2End = b3Start = b1End + smallBRatio
@@ -58,7 +55,7 @@ b3End = b4Start = b3Start + smallBRatio
 for i in range(width):
     color = 0
     color = color + imGray[int(height/2), width - i - 1]
-    if color >= 20:
+    if color >= 30:
         b4End = i
 # b4End = b4Start + bigBRatio
 
@@ -69,7 +66,7 @@ for i in range(height):
     imGray[i, b3End] = 255
     imGray[i, b4End] = 255
 
-a = height/4.75
+a = height/4.55
 """ for i in range(width):
     imGray[int(a), i] = 255 """
 cv.imshow("", imGray)
@@ -78,13 +75,13 @@ cv.waitKey(0)
 # Identify the clips and draw lines
 
 def clips(width, height, start, end):
-    a = height/4.75
+    a = height/4.5
     for i in range(width):
         if (i > start) and (i < end):
             for b in range(start+1, end):
                 color = 0
                 color = color + imGray[int(a), b]
-                if (color > 10):
+                if (color > 1):
                     first = b - 2
                     break
 
@@ -93,7 +90,7 @@ def clips(width, height, start, end):
                 if (b > first + 5):
                     color = color + imGray[int(a), b]
                     # print("color: ", color)
-                    if (color < 5):
+                    if (color < 3):
                         second = b + 2
                         #print("B: ", b)
                         break
@@ -114,8 +111,8 @@ def reagentDetection(first, second, height):
     count = 0
 
     for w in range(first + 10, second - 15):
-        pixelavg = pixelavg + nat[h,w]
-        nat[h,w] = [0, 0, 0]
+        pixelavg = pixelavg + img[h,w]
+        img[h,w] = [0, 0, 0]
         count += 1
     pixelavg = pixelavg / count
 
@@ -160,7 +157,7 @@ def bigBottleDetection(height, start, end, first, second):
         #print("avgInt: ", avgInt)
         #print("avgInt0 = ", avgInt0)
 
-        if (avgInt >= 10):
+        if (avgInt >= 15):
             bottom = j
             avgInt0 = 0
             break
@@ -169,51 +166,33 @@ def bigBottleDetection(height, start, end, first, second):
 
     pixelInt1 = 0
     pixelCount = 0
-    avgInt0 = 0
-    avgIntList = []
-    avgInt10 = 0
-    Int10 = 0
-    prevInt10 = 0
+    pixelCount2 = 0
+    pixelInt2 = 0
 
     for j in range(height):
-        if (j >= bottom + 75):
+        if (j >= bottom + 100):
             pixelCount = 0
             pixelInt1 = 0
+            pixelCount2 = 0
+            pixelInt2 = 0
             for i in range(start+1, end):
                 if (i < first) or (i > second):
-                    if (imGray[height - (j+1), i] >= 20) and (imGray[height - (j+1), i] <= 120) :
+                    if (imGray[height - (j+1), i] >= 20) and (imGray[height - (j+1), i] <= 120):
                         pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
                         pixelCount = pixelCount + 1
-            if (pixelCount != 0):
-                avgInt = pixelInt1 / pixelCount
-            # print("avgInt: ", avgInt)
-            # print("avgInt0 = ", avgInt0)
+                    if (imGray[height - ((j+10)+1), i] >= 20) and (imGray[height - ((j+10)+1), i] <= 120):
+                        pixelInt2 = pixelInt2 + imGray[height - ((j+5)+1), i]
+                        pixelCount2 = pixelCount2 + 1
 
-            if (len(avgIntList) < 10):
-                #print("len: ", len(avgIntList))
-
-                avgIntList.append(avgInt)
-            elif(len(avgIntList) >= 10):
-                for k in range(len(avgIntList)):
-                    #print("Int: ", avgIntList[k-1])
-                    Int10 = Int10 + avgIntList[k-1]
-                    #print("Int10: ", Int10)
-                avgInt10 = Int10 / 10
-                Int10 = 0
-                avgIntList = []
-                #print("###################################################")
-
-            if (prevInt10 == 0):
-                prevInt10 = avgInt10
-            else:
-                diffInt10 = abs(avgInt10 - prevInt10)
-                #print("Diff: ", diffInt10)
-                prevInt10 = avgInt10
+            if (pixelCount != 0) and (pixelCount2 != 0):
+                avgInt1 = pixelInt1 / pixelCount
+                avgInt2 = pixelInt2 / pixelCount2
             
-                if (diffInt10 > 2):
-                    top = j
-
-                    break
+            diff = abs(avgInt2 - avgInt1)
+            print("Diff: ", diff)
+            if (diff >= 5):
+                top = j + 5
+                break
 
     pixelInt1 = 0
     pixelCount = 0
@@ -228,10 +207,10 @@ def bigBottleDetection(height, start, end, first, second):
                 pixelCount = pixelCount + 1
 
             avgInt = pixelInt1 / pixelCount
-            print("avgInt: ", avgInt)
+            #print("avgInt: ", avgInt)
             #print("avgInt0 = ", avgInt0)
 
-            if (avgInt <= 20):
+            if (avgInt <= 36):
                 bottleTop = j
                 avgInt0 = 0
                 break
@@ -288,50 +267,35 @@ def smallBottleDetection(height, start, end, first, second):
 
     pixelInt1 = 0
     pixelCount = 0
-    avgInt0 = 0
-    avgIntList = []
-    avgInt10 = 0
-    Int10 = 0
-    prevInt10 = 0
+    pixelCount2 = 0
+    pixelInt2 = 0
 
     for j in range(height):
-        if (j >= bottom + 80):
+        if (j >= bottom + 95):
             pixelCount = 0
             pixelInt1 = 0
+            pixelInt2 = 0
+            pixelCount2 = 0
             for i in range(start+1, end):
                 if (i < first) or (i > second):
                     if (imGray[height - (j+1), i] >= 20) and (imGray[height - (j+1), i] <= 120) :
                         pixelInt1 = pixelInt1 + imGray[height - (j+1), i]
                         pixelCount = pixelCount + 1
-            if (pixelCount != 0):
-                avgInt = pixelInt1 / pixelCount
-            # print("avgInt: ", avgInt)
-            # print("avgInt0 = ", avgInt0)
+                    if (imGray[height - ((j+10)+1), i] >= 20) and (imGray[height - ((j+10)+1), i] <= 120):
+                        pixelInt2 = pixelInt2 + imGray[height - ((j+5)+1), i]
+                        pixelCount2 = pixelCount2 + 1
 
-            if (len(avgIntList) < 5):
-                #print("len: ", len(avgIntList))
-                avgIntList.append(avgInt)
-            elif(len(avgIntList) >= 5):
-                for k in range(len(avgIntList)):
-                    #print("Int: ", avgIntList[k-1])
-                    Int10 = Int10 + avgIntList[k-1]
-                    #print("Int10: ", Int10)
-                avgInt10 = Int10 / 5
-                Int10 = 0
-                avgIntList = []
-                #print("###################################################")
-
-            if (prevInt10 == 0):
-                prevInt10 = avgInt10
-            else:
-                diffInt10 = abs(avgInt10 - prevInt10)
-                print("Diff: ", diffInt10)
-                prevInt10 = avgInt10
+            if (pixelCount != 0) and (pixelCount2 != 0):
+                avgInt1 = pixelInt1 / pixelCount
+                avgInt2 = pixelInt2 / pixelCount2
             
-                if (diffInt10 >= 1.5):
-                    top = j
-                    break
-
+            diff = abs(avgInt2 - avgInt1)
+            print("Diff: ", diff)
+            if (diff >= 3):
+                top = j + 5
+                break
+            diff = 0 
+            
     pixelInt1 = 0
     pixelCount = 0
     avgInt0 = 0
@@ -345,10 +309,10 @@ def smallBottleDetection(height, start, end, first, second):
                 pixelCount = pixelCount + 1
 
             avgInt = pixelInt1 / pixelCount
-            print("avgInt: ", avgInt)
+            #print("avgInt: ", avgInt)
             #print("avgInt0 = ", avgInt0)
 
-            if (avgInt <= 30):
+            if (avgInt <= 40):
                 bottleTop = j
                 avgInt0 = 0
                 break
