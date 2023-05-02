@@ -3,12 +3,14 @@
 # Fluid Level Detection and Reagent Id for Multiple Bottles
 
 # Import Libraries
+
 import numpy as np
 import cv2 as cv 
 import os
 import csv
 
 # Read File and Gamma Conversion.
+
 nat = cv.imread("FinalTest7.jpg")
 nat_2 = cv.cvtColor(nat, cv.COLOR_BGR2RGB)
 #cv.imshow("", nat_2)
@@ -22,7 +24,7 @@ def gammaCorrection(src, gamma):
 
     return cv.LUT(src, table)
 
-gamma = 0.5 # change the value here to get different result
+gamma = 0.85      # change the value here to get different result
 adjusted = gammaCorrection(nat_2, gamma=gamma)
 cv.imshow("", adjusted)
 cv.waitKey(0)
@@ -38,15 +40,16 @@ print("Height: ", height)
 print("Width: ", width)
 
 # Find ratio of width of the bottles and draw the vertical lines identifying each bottle.
+
 for i in range(width):
     color = 0
     color = color + imGray[int(height/2), i]
-    if color >= 10:
+    if color >= 20:
         b1Start = i
         break
 
-bigBRatio = int(width/3.65)
-smallBRatio = int(width/6.35)
+bigBRatio = int(width/3.55)
+smallBRatio = int(width/6.50)
 # b1Start = int(width/20)
 b1End = b2Start = b1Start + bigBRatio
 b2End = b3Start = b1End + smallBRatio
@@ -55,7 +58,7 @@ b3End = b4Start = b3Start + smallBRatio
 for i in range(width):
     color = 0
     color = color + imGray[int(height/2), width - i - 1]
-    if color >= 30:
+    if color >= 20:
         b4End = i
 # b4End = b4Start + bigBRatio
 
@@ -66,21 +69,23 @@ for i in range(height):
     imGray[i, b3End] = 255
     imGray[i, b4End] = 255
 
-a = height/4.5
+a = height/4.75
+""" for i in range(width):
+    imGray[int(a), i] = 255 """
 cv.imshow("", imGray)
 cv.waitKey(0)
 
 # Identify the clips and draw lines
 
 def clips(width, height, start, end):
-    a = height/4.5
+    a = height/4.75
     for i in range(width):
         if (i > start) and (i < end):
             for b in range(start+1, end):
                 color = 0
                 color = color + imGray[int(a), b]
-                if (color > 1):
-                    first = b - 5
+                if (color > 10):
+                    first = b - 2
                     break
 
             for b in range(start+1, end):
@@ -88,8 +93,8 @@ def clips(width, height, start, end):
                 if (b > first + 5):
                     color = color + imGray[int(a), b]
                     # print("color: ", color)
-                    if (color < 1):
-                        second = b + 5
+                    if (color < 5):
+                        second = b + 2
                         #print("B: ", b)
                         break
         
@@ -136,6 +141,10 @@ def reagentDetection(first, second, height):
     return reagentNo, reagent
 
     #cv.imshow("nat", nat)
+    
+
+
+
 
 # DEFINE FUNCTION: If the bottle width is corresponding to the big bottle, run the fluid detection for big bottle. Save the values in a dictionary and draw the lines.
 
@@ -151,7 +160,7 @@ def bigBottleDetection(height, start, end, first, second):
         #print("avgInt: ", avgInt)
         #print("avgInt0 = ", avgInt0)
 
-        if (avgInt >= 5):
+        if (avgInt >= 10):
             bottom = j
             avgInt0 = 0
             break
@@ -201,7 +210,7 @@ def bigBottleDetection(height, start, end, first, second):
                 #print("Diff: ", diffInt10)
                 prevInt10 = avgInt10
             
-                if (diffInt10 > 6.3):
+                if (diffInt10 > 2):
                     top = j
 
                     break
@@ -219,10 +228,10 @@ def bigBottleDetection(height, start, end, first, second):
                 pixelCount = pixelCount + 1
 
             avgInt = pixelInt1 / pixelCount
-            #print("avgInt: ", avgInt)
+            print("avgInt: ", avgInt)
             #print("avgInt0 = ", avgInt0)
 
-            if (avgInt <= 30):
+            if (avgInt <= 20):
                 bottleTop = j
                 avgInt0 = 0
                 break
@@ -252,6 +261,7 @@ def bigBottleDetection(height, start, end, first, second):
 
     return fluidVolume
 
+
 # DEFINE FUNCTION:Repeat the same for the small bottle with the small bottle code.
 
 def smallBottleDetection(height, start, end, first, second):
@@ -268,7 +278,7 @@ def smallBottleDetection(height, start, end, first, second):
         #print("avgInt: ", avgInt)
         #print("avgInt0 = ", avgInt0)
 
-        if (avgInt >= 5):
+        if (avgInt >= 12):
             bottom = j
             #print("Bottom: ", bottom)
             avgInt0 = 0
@@ -285,7 +295,7 @@ def smallBottleDetection(height, start, end, first, second):
     prevInt10 = 0
 
     for j in range(height):
-        if (j >= bottom + 100):
+        if (j >= bottom + 80):
             pixelCount = 0
             pixelInt1 = 0
             for i in range(start+1, end):
@@ -298,15 +308,15 @@ def smallBottleDetection(height, start, end, first, second):
             # print("avgInt: ", avgInt)
             # print("avgInt0 = ", avgInt0)
 
-            if (len(avgIntList) < 10):
+            if (len(avgIntList) < 5):
                 #print("len: ", len(avgIntList))
                 avgIntList.append(avgInt)
-            elif(len(avgIntList) >= 10):
+            elif(len(avgIntList) >= 5):
                 for k in range(len(avgIntList)):
                     #print("Int: ", avgIntList[k-1])
                     Int10 = Int10 + avgIntList[k-1]
                     #print("Int10: ", Int10)
-                avgInt10 = Int10 / 10
+                avgInt10 = Int10 / 5
                 Int10 = 0
                 avgIntList = []
                 #print("###################################################")
@@ -315,10 +325,10 @@ def smallBottleDetection(height, start, end, first, second):
                 prevInt10 = avgInt10
             else:
                 diffInt10 = abs(avgInt10 - prevInt10)
-                #print("Diff: ", diffInt10)
+                print("Diff: ", diffInt10)
                 prevInt10 = avgInt10
             
-                if (diffInt10 > 3):
+                if (diffInt10 >= 1.5):
                     top = j
                     break
 
@@ -327,7 +337,7 @@ def smallBottleDetection(height, start, end, first, second):
     avgInt0 = 0
 
     for j in range(height):
-        if (j >= top):
+        if (j >= top + 15):
             pixelCount = 0
             pixelInt1 = 0
             for i in range(start+1, end):
@@ -335,10 +345,10 @@ def smallBottleDetection(height, start, end, first, second):
                 pixelCount = pixelCount + 1
 
             avgInt = pixelInt1 / pixelCount
-            #print("avgInt: ", avgInt)
+            print("avgInt: ", avgInt)
             #print("avgInt0 = ", avgInt0)
 
-            if (avgInt <= 20):
+            if (avgInt <= 30):
                 bottleTop = j
                 avgInt0 = 0
                 break
@@ -365,6 +375,7 @@ def smallBottleDetection(height, start, end, first, second):
         fluidVolume = "Needs to be filled"
 
     return fluidVolume
+
 
 # Based on width of each bottle, run the big or small fluid detction function.
 
