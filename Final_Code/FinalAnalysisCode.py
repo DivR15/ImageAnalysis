@@ -1,20 +1,18 @@
+# Team 23027 
+# Created by: Divyansh Rathod
+# Fluid Level Detection and Reagent Id for Multiple Bottles
 
 # Import Libraries
-
 import numpy as np
 import cv2 as cv 
-#from google.colab.patches import cv2_imshow # for image display
-#from skimage import io 
-#import matplotlib.pylab as plt
 import os
 import csv
 
 # Read File and Gamma Conversion.
-
-nat = cv.imread("Multi2B1S.jpg")
+nat = cv.imread("FinalTest7.jpg")
 nat_2 = cv.cvtColor(nat, cv.COLOR_BGR2RGB)
-cv.imshow("", nat_2)
-cv.waitKey(0)
+#cv.imshow("", nat_2)
+#cv.waitKey(0)
 
 def gammaCorrection(src, gamma):
     invGamma = 1 / gamma
@@ -24,20 +22,15 @@ def gammaCorrection(src, gamma):
 
     return cv.LUT(src, table)
 
-
-gamma = 0.5      # change the value here to get different result
+gamma = 0.5 # change the value here to get different result
 adjusted = gammaCorrection(nat_2, gamma=gamma)
 cv.imshow("", adjusted)
 cv.waitKey(0)
-# directory = "C:/Users/dhrat/Desktop/UA Stuff/Sem 7/BME 498/Prototype/Image Analysis"
-# os.chdir(directory)
 cv.imwrite("Threshold.jpg", adjusted)
-
 
 imGray = cv.cvtColor(adjusted, cv.COLOR_BGR2GRAY)
 cv.imshow("", imGray)
 cv.waitKey(0)
-
 
 height, width= imGray.shape[:2]
 
@@ -45,7 +38,6 @@ print("Height: ", height)
 print("Width: ", width)
 
 # Find ratio of width of the bottles and draw the vertical lines identifying each bottle.
-
 for i in range(width):
     color = 0
     color = color + imGray[int(height/2), i]
@@ -100,15 +92,6 @@ def clips(width, height, start, end):
                         second = b + 5
                         #print("B: ", b)
                         break
-            
-            """ for b in range(start+1, end):
-                color = 0
-                color = color + imGray[int(a), end - (b+1)]
-                # print("color: ", color)
-                if (color > 1):
-                    second = end - (b+1)
-                    print("B: ", b)
-                    break """
         
     # print("START: ", start)
     # print("END: ", end)
@@ -119,6 +102,40 @@ def clips(width, height, start, end):
         imGray[b, second] = 255
     
     return first, second
+
+def reagentDetection(first, second, height):
+    h = int(height/4.7)
+    pixelavg = [0,0,0]
+    count = 0
+
+    for w in range(first + 10, second - 15):
+        pixelavg = pixelavg + nat[h,w]
+        nat[h,w] = [0, 0, 0]
+        count += 1
+    pixelavg = pixelavg / count
+
+    b, g, r = pixelavg
+    print("r: ", int(r), "g: ", int(g), "b: ", int(b))
+
+    if (r > 155) and (r < 170) and (g > 160) and (g < 170) and (b > 150) and (b < 165):
+        reagentNo = 4
+        reagent = "Reaction Buffer"
+    elif (r > 0) and (r < 10) and (g > 60) and (g < 75) and (b > 60) and (b < 75):
+        reagentNo = 5
+        reagent = "Ultra CC1"
+    elif (r > 170) and (r < 185) and (g > 70) and (g < 80) and (b > 20) and (b < 35):
+        reagentNo = 6
+        reagent = "Ultra CC2"
+    elif (r > 35) and (r < 45) and (g > 35) and (g < 45) and (b > 38) and (b < 50):
+        reagentNo = 7
+        reagent = "Option"
+    else:
+        reagentNo = "Error"
+        reagent = "Error"
+    
+    return reagentNo, reagent
+
+    #cv.imshow("nat", nat)
 
 # DEFINE FUNCTION: If the bottle width is corresponding to the big bottle, run the fluid detection for big bottle. Save the values in a dictionary and draw the lines.
 
@@ -148,7 +165,6 @@ def bigBottleDetection(height, start, end, first, second):
     avgInt10 = 0
     Int10 = 0
     prevInt10 = 0
-
 
     for j in range(height):
         if (j >= bottom + 75):
@@ -182,7 +198,7 @@ def bigBottleDetection(height, start, end, first, second):
                 prevInt10 = avgInt10
             else:
                 diffInt10 = abs(avgInt10 - prevInt10)
-                print("Diff: ", diffInt10)
+                #print("Diff: ", diffInt10)
                 prevInt10 = avgInt10
             
                 if (diffInt10 > 6.3):
@@ -225,20 +241,16 @@ def bigBottleDetection(height, start, end, first, second):
 
     heightRatio = 17/bottleHeight
     fluidHeight = pixelHeight * heightRatio
-    fluidVolume = (389.2 * fluidHeight) - 224.41
+    fluidVolume = int((389.2 * fluidHeight) - 224.41)
 
     print("Fluid Volume: ", fluidVolume, "ml")
     print("width: ", width)
     print("Height: ", height)
 
-    if fluidVolume < 2000:
+    if fluidVolume < 1500:
         fluidVolume = "Needs to be filled"    
 
     return fluidVolume
-
-    
-
-
 
 # DEFINE FUNCTION:Repeat the same for the small bottle with the small bottle code.
 
@@ -271,8 +283,6 @@ def smallBottleDetection(height, start, end, first, second):
     avgInt10 = 0
     Int10 = 0
     prevInt10 = 0
-
-
 
     for j in range(height):
         if (j >= bottom + 100):
@@ -340,7 +350,6 @@ def smallBottleDetection(height, start, end, first, second):
         imGray[height - (top + 1), i] = 255
         imGray[height - (bottleTop + 1), i] = 255
 
-
     pixelHeight = top - bottom
     bottleHeight = bottleTop - bottom
     print("Height of Liquid: ", pixelHeight)
@@ -348,57 +357,60 @@ def smallBottleDetection(height, start, end, first, second):
 
     heightRatio = 18/bottleHeight
     fluidHeight = pixelHeight * heightRatio
-    fluidVolume = (166.67 * fluidHeight)
+    fluidVolume = int((166.67 * fluidHeight))
 
     print("Fluid Volume: ", fluidVolume, "ml")
 
-    if fluidVolume < 2000:
+    if fluidVolume < 750:
         fluidVolume = "Needs to be filled"
 
     return fluidVolume
-
 
 # Based on width of each bottle, run the big or small fluid detction function.
 
 clip1S, clip1E = clips(width,height,b1Start,b1End)
 bottle1 = bigBottleDetection(height, b1Start, b1End, clip1S, clip1E)
+reagentNo1, reagent1 = reagentDetection(clip1S, clip1E, height)
 if type(bottle1) != str:
     toFill1 = 4800 - int(bottle1)
 else:
     toFill1 = "Upto 4800 ml"
 
-cv.imshow("Final", imGray)
-cv.waitKey(0)
+#cv.imshow("Final", imGray)
+#cv.waitKey(0)
 
 clip2S, clip2E = clips(width,height,b2Start,b2End)
 bottle2 = smallBottleDetection(height, b2Start, b2End, clip2S, clip2E)
+reagentNo2, reagent2 = reagentDetection(clip2S, clip2E, height)
 if type(bottle2) != str:
     toFill2 = 2400 - int(bottle2)
 else:
     toFill2 = "Upto 2400 ml"
 
-cv.imshow("Final", imGray)
-cv.waitKey(0)
+#cv.imshow("Final", imGray)
+#cv.waitKey(0)
 
 clip3S, clip3E = clips(width,height,b3Start,b3End)
 bottle3 = smallBottleDetection(height, b3Start, b3End, clip3S, clip3E)
+reagentNo3, reagent3 = reagentDetection(clip3S, clip3E, height)
 if type(bottle3) != str:
     toFill3 = 2400 - int(bottle3)
 else:
     toFill3 = "Upto 2400 ml"
 
-cv.imshow("Final", imGray)
-cv.waitKey(0)
+#cv.imshow("Final", imGray)
+#cv.waitKey(0)
 
 clip4S, clip4E = clips(width,height,b4Start,b4End)
 bottle4 = bigBottleDetection(height, b4Start, b4End, clip4S, clip4E)
+reagentNo4, reagent4 = reagentDetection(clip4S, clip4E, height)
 if type(bottle4) != str:
     toFill4 = 4800 - int(bottle4)
 else:
     toFill4 = "Upto 4800 ml"
 
-cv.imshow("Final", imGray)
-cv.waitKey(0)
+#cv.imshow("Final", imGray)
+#cv.waitKey(0)
 
 # Display the fianl picture with all the lines.
 
@@ -407,11 +419,11 @@ cv.waitKey(0)
 
 # Export the dictionary to a csv file.
 
-header = ["Bottle", "Value", "Fill"]
-dataDict =  [{"Bottle": 1, "Value" : bottle1, "Fill" : toFill1 },
-{"Bottle": 2, "Value" : bottle2, "Fill" : toFill2}, 
-{"Bottle": 3, "Value" : bottle3, "Fill" : toFill3}, 
-{"Bottle": 4, "Value" : bottle4, "Fill" : toFill4}]
+header = ["Number", "Reagent", "Value", "Fill"]
+dataDict =  [{"Number": reagentNo1, "Reagent": reagent1, "Value" : bottle1, "Fill" : toFill1 },
+{"Number": reagentNo2, "Reagent": reagent2, "Value" : bottle2, "Fill" : toFill2}, 
+{"Number": reagentNo3, "Reagent": reagent3, "Value" : bottle3, "Fill" : toFill3}, 
+{"Number": reagentNo4, "Reagent": reagent4, "Value" : bottle4, "Fill" : toFill4}]
 
 filename = "ULTRABulkReagents_Data.csv"
 with open(filename, "w") as csvfile:
@@ -419,6 +431,4 @@ with open(filename, "w") as csvfile:
     writer.writeheader()
     writer.writerows(dataDict)
 
-
-
-
+cv.destroyAllWindows()
