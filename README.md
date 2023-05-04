@@ -23,7 +23,7 @@ For analysis of Big and Small Bottles:
 - Thresholding: draws a line for the bottom of the bottle, top of the bottle and at the fluid level
 
 ## Setup and Basic Use
-Once the repository is downloaded, there are two main components to the code inside the `Final_Code` folder: the analysis code via `FinalAnalysisCode.py` in the `Analysis Code` folder, and `merge.py`, which includes the system peripherals (and is the program that is used by the system).
+Once the repository is downloaded, there are two main components to the code inside the `Final_Code` folder: the analysis code via `FinalAnalysisCode.py` in the `Analysis Code` folder, and `mergeFinal.py`, which includes the system peripherals (and is the program that is used by the system).
 
 ### `Analysis Code`
 Here, the analysis code can be tested indepdently from the GUI for accuracy testing of fluid level estimation or editing of `FinalAnalysisCode.py`. The folder contains the latter, as well as several images to perform tests on. Before using any software within the repository, ensure the proper [Dependencies](#dependencies) are downloaded and applied.
@@ -56,9 +56,9 @@ img = cv.imread("Test2_5B1_25S.jpg") # Analyze 2.5 L big bottles; 1.25 L small b
 
 Run the code to have the chosen image analyzed.
 
-### `merge.py`
+### `mergeFinal.py`
 
-This is the main file that the system runs, and combines the analysis code along with the GUI so that once the program is opened, technicians need only interact with the GUI in order to access the system's functionality. Note that `merge.py` requires `my3.kv` to function. Please see the provided manual for further information about the use of the system.
+This is the main file that the system runs, and combines the analysis code along with the GUI so that once the program is opened, technicians need only interact with the GUI in order to access the system's functionality. Note that `mergeFinal.py` requires `my3.kv` to function. Also note that the system itself runs on an identical but differently named `merge.py` Please see the provided manual for further information about the use of the system.
 
 ## Dependencies
 
