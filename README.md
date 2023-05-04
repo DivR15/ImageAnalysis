@@ -58,7 +58,7 @@ Run the code to have the chosen image analyzed.
 
 ### `mergeFinal.py`
 
-This is the main file that the system runs, and combines the analysis code along with the GUI so that once the program is opened, technicians need only interact with the GUI in order to access the system's functionality. Note that `mergeFinal.py` requires `my3.kv` to function. Also note that the system itself runs on an identical but differently named `merge.py` Please see the provided manual for further information about the use of the system.
+This is the main file that the system runs, and combines the analysis code along with the GUI so that once the program is opened, technicians need only interact with the GUI in order to access the system's functionality. Note that `mergeFinal.py` requires `my3.kv` to function. Also note that the system itself runs on an identical but differently named `merge.py`. Please see the provided manual for further information about the use of the system.
 
 ## Dependencies
 
